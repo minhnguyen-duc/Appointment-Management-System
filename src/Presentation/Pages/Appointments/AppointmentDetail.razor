@@ -1,0 +1,47 @@
+@page "/appointments/{Id:guid}"
+@attribute [Authorize]
+@inject AppointmentClientService ApptService
+
+<PageTitle>Chi tiết lịch hẹn</PageTitle>
+
+@if (_loading) { <LoadingSpinner FullPage="true" /> }
+else if (_appointment is null) { <NotFoundPage /> }
+else
+{
+    <div class="page-header mb-4">
+        <h4 class="mb-0">Lịch hẹn #@_appointment.Id.ToString()[..8].ToUpper()</h4>
+        <StatusBadge Status="_appointment.Status" />
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <AppointmentDetailCard Appointment="_appointment" />
+            <PatientInfoCard Patient="_appointment.Patient" Class="mt-4" />
+        </div>
+        <div class="col-lg-5">
+            <DoctorInfoCard Doctor="_appointment.Doctor" />
+            <AppointmentActions Appointment="_appointment"
+                                OnCancelled="Reload"
+                                OnConfirmed="Reload"
+                                Class="mt-4" />
+            <PaymentStatusCard Appointment="_appointment" Class="mt-4" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    [SupplyParameterFromQuery] public bool Booked { get; set; }
+
+    private AppointmentDto? _appointment;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _appointment = await ApptService.GetByIdAsync(Id);
+        _loading = false;
+    }
+}

@@ -1,0 +1,9 @@
+<div class="text-center py-5 text-muted">
+    <i class="bi @Icon fs-1 d-block mb-3"></i>
+    <p class="mb-0">@Message</p>
+</div>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "bi-inbox";
+    [Parameter] public string Message { get; set; } = "Không có dữ liệu";
+}

@@ -1,0 +1,11 @@
+@using static Pages.MedicalFaq
+
+<div class="chat-bubble chat-bubble-@Message.Role">
+    @if (Message.Role == "ai")
+    { <i class="bi bi-robot chat-avatar"></i> }
+    <div class="chat-text">@Message.Content</div>
+</div>
+
+@code {
+    [Parameter] public ChatMessage Message { get; set; } = null!;
+}

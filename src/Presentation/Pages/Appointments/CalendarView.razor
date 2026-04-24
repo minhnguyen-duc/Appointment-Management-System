@@ -1,0 +1,35 @@
+@page "/appointments/calendar"
+@attribute [Authorize]
+@inject AppointmentClientService ApptService
+
+<PageTitle>Lịch tháng</PageTitle>
+
+<div class="page-header mb-4">
+    <h4 class="mb-0">Lịch hẹn — Tháng @_currentMonth.ToString("MM/yyyy")</h4>
+    <div class="btn-group">
+        <button class="btn btn-outline-secondary" @onclick="PrevMonth">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-outline-secondary" @onclick="() => _currentMonth = DateOnly.FromDateTime(DateTime.Today)">
+            Hôm nay
+        </button>
+        <button class="btn btn-outline-secondary" @onclick="NextMonth">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<MonthlyCalendar Month="_currentMonth" Appointments="_appointments" />
+
+@code {
+    private DateOnly _currentMonth = DateOnly.FromDateTime(DateTime.Today);
+    private List<AppointmentDto> _appointments = [];
+
+    protected override async Task OnParametersSetAsync() => await LoadMonth();
+
+    private async Task LoadMonth()
+        => _appointments = await ApptService.GetByMonthAsync(_currentMonth);
+
+    private async Task PrevMonth() { _currentMonth = _currentMonth.AddMonths(-1); await LoadMonth(); }
+    private async Task NextMonth() { _currentMonth = _currentMonth.AddMonths(1); await LoadMonth(); }
+}

@@ -1,0 +1,57 @@
+@page "/patients"
+@attribute [Authorize]
+@inject PatientClientService PatientService
+@inject NavigationManager Nav
+
+<PageTitle>Bệnh nhân</PageTitle>
+
+<div class="page-header mb-4">
+    <div>
+        <h4 class="mb-0">Bệnh nhân</h4>
+        <p class="text-muted small">Quản lý hồ sơ bệnh nhân</p>
+    </div>
+    <button class="btn btn-primary" @onclick="ShowCreateModal">
+        <i class="bi bi-person-plus me-1"></i>Thêm bệnh nhân
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <input type="search" class="form-control w-auto d-inline-block"
+               placeholder="Tìm theo tên, SĐT..."
+               @bind="_search" @bind:event="oninput" @oninput="Search" />
+    </div>
+    <div class="card-body p-0">
+        @if (_loading) { <LoadingSpinner /> }
+        else
+        {
+            <PatientTable Patients="_patients"
+                          OnView="id => Nav.NavigateTo($"/patients/{id}")" />
+            <Pagination CurrentPage="_page" TotalPages="_totalPages" OnPageChanged="ChangePage" />
+        }
+    </div>
+</div>
+
+<PatientFormModal Visible="_showModal" OnClose="() => _showModal = false" OnSaved="Reload" />
+
+@code {
+    private List<PatientDto> _patients = [];
+    private string _search = "";
+    private bool _loading = true;
+    private bool _showModal;
+    private int _page = 1, _totalPages = 1;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        var result = await PatientService.GetPagedAsync(_search, _page);
+        _patients = result.Items; _totalPages = result.TotalPages;
+        _loading = false;
+    }
+
+    private async Task Search(ChangeEventArgs _) { _page = 1; await Reload(); }
+    private async Task ChangePage(int p) { _page = p; await Reload(); }
+    private void ShowCreateModal() => _showModal = true;
+}

@@ -1,0 +1,52 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Bệnh nhân</th>
+                <th>Bác sĩ</th>
+                <th>Ngày giờ</th>
+                <th>Trạng thái</th>
+                @if (!Compact)
+                {
+                    <th class="text-end">Thao tác</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Appointments)
+            {
+                <tr @onclick="() => OnView.InvokeAsync(a.Id)" style="cursor:pointer">
+                    <td>
+                        <div class="fw-semibold">@a.PatientName</div>
+                    </td>
+                    <td>
+                        <div>@a.DoctorName</div>
+                        <small class="text-muted">@a.Specialization</small>
+                    </td>
+                    <td>
+                        <div>@a.ScheduledAt.ToString("dd/MM/yyyy")</div>
+                        <small class="text-muted">@a.ScheduledAt.ToString("HH:mm")</small>
+                    </td>
+                    <td><StatusBadge Status="a.Status" /></td>
+                    @if (!Compact)
+                    {
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => OnCancel.InvokeAsync(a.Id)">
+                                Huỷ
+                            </button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public List<AppointmentDto> Appointments { get; set; } = [];
+    [Parameter] public bool Compact { get; set; }
+    [Parameter] public EventCallback<Guid> OnView { get; set; }
+    [Parameter] public EventCallback<Guid> OnCancel { get; set; }
+}

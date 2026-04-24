@@ -1,0 +1,19 @@
+<div class="on-duty-list">
+    @foreach (var doc in Doctors)
+    {
+        <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+            <div class="on-duty-avatar"><i class="bi bi-person-circle fs-4 text-muted"></i></div>
+            <div class="flex-fill">
+                <div class="fw-semibold small">@doc.FullName</div>
+                <div class="text-muted" style="font-size:.75rem">@doc.Specialization</div>
+            </div>
+            <span class="badge bg-success-subtle text-success">Trực</span>
+        </div>
+    }
+    @if (!Doctors.Any())
+    { <p class="text-muted small text-center py-3">Không có bác sĩ trực</p> }
+</div>
+
+@code {
+    [Parameter] public List<DoctorDto> Doctors { get; set; } = [];
+}

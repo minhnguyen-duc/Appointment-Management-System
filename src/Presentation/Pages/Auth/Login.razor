@@ -1,0 +1,66 @@
+@page "/auth/login"
+@layout EmptyLayout
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<PageTitle>Đăng nhập</PageTitle>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <img src="images/logo.svg" alt="AMS" />
+            <h4>Appointment Management System</h4>
+            <p class="text-muted">Hệ thống đặt lịch khám bệnh 2026</p>
+        </div>
+
+        @if (_step == AuthStep.EnterPhone)
+        {
+            <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
+        }
+        else
+        {
+            <VerifyOtpForm PhoneNumber="_phone"
+                           OnSubmit="VerifyOtp"
+                           OnResend="RequestOtp"
+                           IsLoading="_loading" />
+        }
+
+        <ErrorAlert Message="@_error" />
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private AuthStep _step = AuthStep.EnterPhone;
+    private string _phone = "";
+    private bool _loading;
+    private string _error = "";
+
+    private async Task RequestOtp(string phone)
+    {
+        _loading = true; _error = "";
+        try
+        {
+            await AuthService.RequestOtpAsync(phone);
+            _phone = phone;
+            _step = AuthStep.VerifyOtp;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private async Task VerifyOtp(string otp)
+    {
+        _loading = true; _error = "";
+        try
+        {
+            await AuthService.VerifyOtpAsync(_phone, otp);
+            Nav.NavigateTo(ReturnUrl ?? "/");
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private enum AuthStep { EnterPhone, VerifyOtp }
+}

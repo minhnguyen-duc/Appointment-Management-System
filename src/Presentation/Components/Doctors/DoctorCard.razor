@@ -1,0 +1,23 @@
+<div class="card doctor-card h-100 shadow-sm" @onclick="OnView" style="cursor:pointer">
+    <div class="card-body text-center">
+        <div class="doctor-avatar-lg mx-auto mb-3">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <h6 class="card-title mb-1">@Doctor.FullName</h6>
+        <p class="text-primary small mb-2">@Doctor.Specialization</p>
+        <div class="d-flex justify-content-center gap-2">
+            <span class="badge bg-light text-dark">
+                <i class="bi bi-calendar-check me-1"></i>@Doctor.AppointmentCount lịch hẹn
+            </span>
+            @if (Doctor.IsActive)
+            { <span class="badge bg-success-subtle text-success">Đang hoạt động</span> }
+            else
+            { <span class="badge bg-secondary-subtle text-secondary">Ngừng nhận</span> }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DoctorDto Doctor { get; set; } = null!;
+    [Parameter] public EventCallback OnView { get; set; }
+}

@@ -1,0 +1,29 @@
+<div class="card border-primary">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0">Tóm tắt đặt lịch</h6>
+    </div>
+    <div class="card-body">
+        @if (Model.DoctorName is not null)
+        {
+            <div class="mb-2">
+                <small class="text-muted">Bác sĩ</small>
+                <div class="fw-semibold">@Model.DoctorName</div>
+            </div>
+        }
+        @if (Model.ScheduledAt.HasValue)
+        {
+            <div class="mb-2">
+                <small class="text-muted">Thời gian</small>
+                <div class="fw-semibold">@Model.ScheduledAt.Value.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+        }
+        @if (Model.DoctorName is null && !Model.ScheduledAt.HasValue)
+        {
+            <p class="text-muted small text-center my-3">Chọn bác sĩ và ngày giờ để xem tóm tắt</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public BookingSummaryModel Model { get; set; } = new();
+}

@@ -1,0 +1,45 @@
+@page "/patients/{Id:guid}"
+@attribute [Authorize]
+@inject PatientClientService PatientService
+
+<PageTitle>Hồ sơ bệnh nhân</PageTitle>
+
+@if (_loading) { <LoadingSpinner FullPage="true" /> }
+else if (_patient is null) { <NotFoundPage /> }
+else
+{
+    <div class="page-header mb-4">
+        <h4 class="mb-0">@_patient.FullName</h4>
+        <button class="btn btn-outline-primary" @onclick="() => _editing = true">
+            <i class="bi bi-pencil me-1"></i>Sửa hồ sơ
+        </button>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <PatientProfileCard Patient="_patient" />
+        </div>
+        <div class="col-lg-8">
+            <AppointmentHistoryCard PatientId="_patient.Id" />
+        </div>
+    </div>
+
+    <PatientFormModal Visible="_editing" Patient="_patient"
+                      OnClose="() => _editing = false"
+                      OnSaved="Reload" />
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private PatientDto? _patient;
+    private bool _loading = true, _editing;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _patient = await PatientService.GetByIdAsync(Id);
+        _loading = false;
+    }
+}

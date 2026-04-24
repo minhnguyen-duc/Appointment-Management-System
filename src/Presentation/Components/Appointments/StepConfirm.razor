@@ -1,0 +1,36 @@
+<div class="step-confirm">
+    <h6 class="mb-3">Xác nhận thông tin</h6>
+
+    <div class="confirm-summary card bg-light border-0 p-3 mb-4">
+        <div class="row g-2">
+            <div class="col-5 text-muted small">Bác sĩ</div>
+            <div class="col-7 fw-semibold">@Model.DoctorName</div>
+            <div class="col-5 text-muted small">Ngày giờ</div>
+            <div class="col-7 fw-semibold">@Model.ScheduledAt.ToString("dd/MM/yyyy HH:mm")</div>
+            <div class="col-5 text-muted small">Thời lượng</div>
+            <div class="col-7">@Model.DurationMinutes phút</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ghi chú triệu chứng (tuỳ chọn)</label>
+        <textarea class="form-control" rows="3"
+                  placeholder="Mô tả triệu chứng hoặc lý do khám..."
+                  @bind="Model.Notes"></textarea>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="OnBack" disabled="@IsLoading">Quay lại</button>
+        <button class="btn btn-primary flex-fill" @onclick="OnConfirm" disabled="@IsLoading">
+            @if (IsLoading) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Xác nhận đặt lịch
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public BookingFormModel Model { get; set; } = new();
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+}

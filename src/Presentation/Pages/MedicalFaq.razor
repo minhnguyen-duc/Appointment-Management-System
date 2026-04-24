@@ -1,0 +1,74 @@
+@page "/medical-faq"
+@attribute [Authorize]
+@inject RagClientService RagService
+
+<PageTitle>Hỏi đáp y tế (AI)</PageTitle>
+
+<div class="page-header mb-4">
+    <div>
+        <h4 class="mb-0">Hỏi đáp y tế</h4>
+        <p class="text-muted small">Được hỗ trợ bởi Azure OpenAI GPT-4o — Chỉ tư vấn thông tin, không thay thế chẩn đoán bác sĩ</p>
+    </div>
+</div>
+
+<div class="faq-layout">
+    <div class="chat-window card">
+        <div class="card-body chat-messages" @ref="_chatContainer">
+            @foreach (var msg in _messages)
+            {
+                <ChatBubble Message="msg" />
+            }
+            @if (_thinking)
+            {
+                <div class="chat-bubble chat-bubble-ai">
+                    <span class="thinking-dots"><span></span><span></span><span></span></span>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <div class="input-group">
+                <input type="text" class="form-control"
+                       placeholder="Nhập câu hỏi y tế... (VD: triệu chứng đau đầu, viêm họng)"
+                       @bind="_input" @bind:event="oninput"
+                       @onkeydown="OnKeyDown"
+                       disabled="@_thinking" />
+                <button class="btn btn-primary" @onclick="Send" disabled="@(string.IsNullOrWhiteSpace(_input) || _thinking)">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+            <p class="text-muted" style="font-size:.7rem;margin:.4rem 0 0">
+                ⚠️ Hệ thống AI chỉ cung cấp thông tin y tế. Mọi quyết định điều trị cần có ý kiến bác sĩ.
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ChatMessage> _messages = [
+        new("ai", "Xin chào! Tôi có thể giúp bạn tìm hiểu thông tin y tế, triệu chứng bệnh, hoặc các dịch vụ khám tại bệnh viện. Bạn muốn hỏi gì?")
+    ];
+    private string _input = "";
+    private bool _thinking;
+    private ElementReference _chatContainer;
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(_input)) return;
+        var q = _input.Trim();
+        _messages.Add(new("user", q));
+        _input = ""; _thinking = true;
+
+        try
+        {
+            var answer = await RagService.QueryAsync(q);
+            _messages.Add(new("ai", answer));
+        }
+        catch { _messages.Add(new("ai", "Xin lỗi, tôi không thể xử lý câu hỏi lúc này. Vui lòng thử lại.")); }
+        finally { _thinking = false; }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    { if (e.Key == "Enter" && !e.ShiftKey) await Send(); }
+
+    public record ChatMessage(string Role, string Content);
+}

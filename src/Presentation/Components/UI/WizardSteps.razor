@@ -1,0 +1,20 @@
+<div class="wizard-steps d-flex gap-0">
+    @for (int i = 0; i < Steps.Count; i++)
+    {
+        var idx = i + 1;
+        var label = Steps[i];
+        var cls = idx < CurrentStep ? "completed" : idx == CurrentStep ? "active" : "";
+        <div class="wizard-step @cls flex-fill text-center">
+            <div class="step-circle">
+                @if (idx < CurrentStep) { <i class="bi bi-check"></i> }
+                else { <span>@idx</span> }
+            </div>
+            <div class="step-label small">@label</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int CurrentStep { get; set; }
+    [Parameter] public List<string> Steps { get; set; } = [];
+}
