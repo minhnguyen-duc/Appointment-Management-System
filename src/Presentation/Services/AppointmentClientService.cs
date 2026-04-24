@@ -1,6 +1,7 @@
 using Application.Appointments.Commands;
 using Application.Appointments.DTOs;
 using Application.Appointments.Queries;
+using Application.Common.Interfaces;
 
 namespace Presentation.Services;
 
@@ -12,8 +13,8 @@ public class AppointmentClientService(
         => bookHandler.HandleAsync(new BookAppointmentCommand(
             model.PatientId, model.DoctorId, model.ScheduledAt, model.DurationMinutes));
 
-    public Task CancelAsync(Guid id)
-        => queryService.CancelAsync(id);
+    public Task CancelAsync(Guid id)      => queryService.CancelAsync(id);
+    public Task ConfirmAsync(Guid id)     => queryService.ConfirmAsync(id);
 
     public Task<AppointmentDto?> GetByIdAsync(Guid id)
         => queryService.GetByIdAsync(id);

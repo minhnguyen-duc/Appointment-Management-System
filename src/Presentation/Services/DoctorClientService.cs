@@ -1,3 +1,5 @@
+using Application.Common.Interfaces;
+
 namespace Presentation.Services;
 
 public class DoctorClientService(IDoctorQueryService queryService)

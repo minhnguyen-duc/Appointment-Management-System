@@ -1,3 +1,0 @@
-# Run: dotnet new sln --name AppointmentManagementSystem
-# Then: dotnet sln add src/Domain src/Application src/Infrastructure src/Presentation
-# Then: dotnet sln add tests/Domain.UnitTests tests/Application.UnitTests

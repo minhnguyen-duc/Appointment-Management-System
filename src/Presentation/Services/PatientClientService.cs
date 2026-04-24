@@ -1,6 +1,10 @@
+using Application.Common.Interfaces;
+
 namespace Presentation.Services;
 
-public class PatientClientService(IPatientQueryService queryService, IPatientCommandService commandService)
+public class PatientClientService(
+    IPatientQueryService queryService,
+    IPatientCommandService commandService)
 {
     public Task<PagedResult<PatientDto>> GetPagedAsync(string search, int page)
         => queryService.GetPagedAsync(search, page);
