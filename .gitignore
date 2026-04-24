@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.userprefs
+*.DS_Store
+appsettings.Development.json
+appsettings.Local.json
+
+## Logs
+logs/
+*.log
+
+## NuGet
+*.nupkg
+packages/
+
+## Migrations (optional - keep if you want to track)
+# src/Infrastructure/Persistence/Migrations/
+
+## Test Results
+TestResults/
+coverage/
