@@ -1,8 +1,8 @@
 <div class="filter-bar d-flex flex-wrap gap-2">
     <input type="search" class="form-control w-auto" placeholder="Tìm bệnh nhân, bác sĩ..."
-           @bind="_model.Keyword" @bind:event="oninput" @oninput="Notify" />
+           @bind="_model.Keyword" @bind:after="Notify" />
     <input type="date" class="form-control w-auto"
-           @bind="_model.Date" @bind:event="onchange" @onchange="Notify" />
+           @bind="_model.Date" @bind:after="Notify" />
     <select class="form-select w-auto" @bind="_model.Status" @bind:after="Notify">
         <option value="">Tất cả trạng thái</option>
         <option value="Pending">Chờ xác nhận</option>

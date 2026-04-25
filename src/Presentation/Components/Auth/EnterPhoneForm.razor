@@ -1,22 +1,43 @@
+@using Domain.ValueObjects
+
 <div class="auth-form">
     <h5>Xác thực số điện thoại</h5>
-    <p class="text-muted small">Nhập số điện thoại để nhận mã OTP</p>
+    <p class="text-muted small">Nhập số điện thoại để nhận mã OTP qua SMS hoặc Zalo</p>
 
     <div class="mb-3">
-        <label class="form-label">Số điện thoại</label>
-        <input type="tel" class="form-control form-control-lg"
-               placeholder="0912 345 678"
-               @bind="_phone" @bind:event="oninput"
-               @onkeydown="OnKeyDown"
-               disabled="@IsLoading" />
+        <label class="form-label fw-semibold">Số điện thoại</label>
+        <div class="input-group input-group-lg">
+            <span class="input-group-text">🇻🇳 +84</span>
+            <input type="tel"
+                   class="form-control @(_touched && !_isValid ? "is-invalid" : _touched && _isValid ? "is-valid" : "")"
+                   placeholder="0912 345 678"
+                   maxlength="10"
+                   inputmode="numeric"
+                   @bind="_phone"
+                   @bind:event="oninput"
+                   @onkeydown="OnKeyDown"
+                   @onblur="OnBlur"
+                   disabled="@IsLoading" />
+            @if (_touched && !_isValid)
+            {
+                <div class="invalid-feedback">
+                    Số điện thoại không hợp lệ. Vui lòng nhập đầu số Việt Nam (03x/05x/07x/08x/09x) gồm 10 chữ số.
+                </div>
+            }
+        </div>
+        <div class="form-text text-muted mt-1">
+            <i class="bi bi-info-circle me-1"></i>Hỗ trợ: 032–039, 056–059, 070/076–079, 08x, 09x
+        </div>
     </div>
 
     <button class="btn btn-primary w-100 btn-lg"
             @onclick="Submit"
-            disabled="@(IsLoading || string.IsNullOrWhiteSpace(_phone))">
+            disabled="@(IsLoading || string.IsNullOrWhiteSpace(_phone) || (_touched && !_isValid))">
         @if (IsLoading)
-        { <span class="spinner-border spinner-border-sm me-2"></span> }
-        Nhận mã OTP
+        {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+        }
+        <i class="bi bi-send me-1"></i> Nhận mã OTP
     </button>
 </div>
 
@@ -25,8 +46,26 @@
     [Parameter] public bool IsLoading { get; set; }
 
     private string _phone = "";
+    private bool _touched;
+    private bool _isValid;
 
-    private async Task Submit() => await OnSubmit.InvokeAsync(_phone);
+    private void Validate() => _isValid = VietnamPhoneNumber.IsValid(_phone);
+
+    private void OnBlur()
+    {
+        if (!string.IsNullOrWhiteSpace(_phone)) { _touched = true; Validate(); }
+    }
+
+    private async Task Submit()
+    {
+        _touched = true;
+        Validate();
+        if (!_isValid) return;
+        await OnSubmit.InvokeAsync(_phone.Trim());
+    }
+
     private async Task OnKeyDown(KeyboardEventArgs e)
-    { if (e.Key == "Enter") await Submit(); }
+    {
+        if (e.Key == "Enter") await Submit();
+    }
 }

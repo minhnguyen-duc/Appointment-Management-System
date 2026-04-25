@@ -26,7 +26,7 @@
         {
             <AppointmentTable Appointments="_appointments"
                               OnCancel="CancelAppointment"
-                              OnView="id => Nav.NavigateTo($"/appointments/{id}")" />
+                              OnView="@ViewAppointment" />
             <Pagination CurrentPage="_page" TotalPages="_totalPages" OnPageChanged="ChangePage" />
         }
     </div>
@@ -50,6 +50,7 @@
         _loading = false;
     }
 
+    private void ViewAppointment(Guid id) => Nav.NavigateTo("/appointments/" + id);
     private async Task OnFilterChanged(AppointmentFilterModel f) { _filter = f; _page = 1; await LoadAsync(); }
     private async Task ChangePage(int p) { _page = p; await LoadAsync(); }
     private async Task CancelAppointment(Guid id)

@@ -1,3 +1,4 @@
+using Presentation;
 using Application.Auth.Commands;
 using Application.Appointments.Commands;
 using Application.Common.Interfaces;
@@ -5,6 +6,8 @@ using Infrastructure.AI.SemanticKernel;
 using Infrastructure.ExternalServices.Calendar;
 using Infrastructure.ExternalServices.SendGrid;
 using Infrastructure.ExternalServices.Twilio;
+using Infrastructure.ExternalServices.Zalo;
+using Infrastructure.ExternalServices;
 using Infrastructure.ExternalServices.VnPay;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -13,6 +16,9 @@ using Microsoft.EntityFrameworkCore;
 using Presentation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── HttpContext ──
+builder.Services.AddHttpContextAccessor();
 
 // ── Database ──
 builder.Services.AddDbContext<AppDbContext>(opt =>
@@ -34,7 +40,9 @@ builder.Services.AddScoped<RequestOtpCommandHandler>();
 builder.Services.AddScoped<VerifyOtpCommandHandler>();
 
 // ── External Services ──
-builder.Services.AddScoped<ISmsService,          TwilioSmsService>();
+builder.Services.AddScoped<TwilioSmsService>();
+builder.Services.AddScoped<ZaloOaSmsService>();
+builder.Services.AddScoped<ISmsService, CompositeSmsService>(); // KAN-11: Twilio + Zalo fallback
 builder.Services.AddScoped<IEmailService,        SendGridEmailService>();
 builder.Services.AddScoped<IPaymentService,      VnPayPaymentService>();
 builder.Services.AddScoped<ICalendarSyncService, UnifiedCalendarSyncService>();
@@ -51,10 +59,20 @@ builder.Services.AddScoped<RagClientService>();
 
 // ── Blazor ──
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveServerComponents();
 
-builder.Services.AddAuthorizationCore();
+// ── Authentication & Authorization ──
+// KAN-11: Cookie-based session after OTP verification
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath         = "/auth/login";
+        options.LogoutPath        = "/auth/logout";
+        options.ExpireTimeSpan    = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
 
 // ── CORS (nếu dùng WebAssembly client riêng) ──
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
@@ -78,10 +96,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// .NET 9/10: serve Blazor framework files (_framework/blazor.web.js etc.)
+// UseStaticWebAssets ensures NuGet-sourced static assets are served in all environments
+if (!app.Environment.IsProduction())
+    app.UseStaticWebAssets();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode()
-   .AddInteractiveWebAssemblyRenderMode();
+   .AddInteractiveServerRenderMode() // WASM mode omitted: no .Client project (see arch spec §2.1)
+   .WithStaticAssets();
 
 app.Run();

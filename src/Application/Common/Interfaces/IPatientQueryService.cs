@@ -1,4 +1,4 @@
-using Presentation.Services;
+using Application.Common.DTOs;
 
 namespace Application.Common.Interfaces;
 
@@ -6,4 +6,7 @@ public interface IPatientQueryService
 {
     Task<PatientDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<PagedResult<PatientDto>> GetPagedAsync(string? search, int page, int pageSize = 20, CancellationToken ct = default);
+
+    // KAN-11: lookup by phone for post-OTP redirect (AC4)
+    Task<Domain.Entities.Patient?> GetByPhoneAsync(string phoneNumber, CancellationToken ct = default);
 }
