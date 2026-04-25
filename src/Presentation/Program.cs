@@ -17,6 +17,9 @@ using Presentation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── HttpContext ──
+builder.Services.AddHttpContextAccessor();
+
 // ── Database ──
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -59,7 +62,18 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAuthorizationCore();
+// ── Authentication & Authorization ──
+// KAN-11: Cookie-based session after OTP verification
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath         = "/auth/login";
+        options.LogoutPath        = "/auth/logout";
+        options.ExpireTimeSpan    = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
 
 // ── CORS (nếu dùng WebAssembly client riêng) ──
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
@@ -84,6 +98,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode()
