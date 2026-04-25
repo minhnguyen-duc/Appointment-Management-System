@@ -28,4 +28,9 @@ public class PatientQueryService(AppDbContext db) : IPatientQueryService
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
         };
     }
+    // KAN-11: GetByPhoneAsync — lookup bệnh nhân sau xác thực OTP (AC4)
+    public async Task<Domain.Entities.Patient?> GetByPhoneAsync(string phoneNumber, CancellationToken ct = default)
+        => await db.Patients.FirstOrDefaultAsync(p => p.PhoneNumber == phoneNumber, ct);
 }
+
+// KAN-11: Lookup patient by phone number after OTP verification

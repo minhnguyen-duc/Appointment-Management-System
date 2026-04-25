@@ -5,6 +5,8 @@ using Infrastructure.AI.SemanticKernel;
 using Infrastructure.ExternalServices.Calendar;
 using Infrastructure.ExternalServices.SendGrid;
 using Infrastructure.ExternalServices.Twilio;
+using Infrastructure.ExternalServices.Zalo;
+using Infrastructure.ExternalServices;
 using Infrastructure.ExternalServices.VnPay;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -34,7 +36,9 @@ builder.Services.AddScoped<RequestOtpCommandHandler>();
 builder.Services.AddScoped<VerifyOtpCommandHandler>();
 
 // ── External Services ──
-builder.Services.AddScoped<ISmsService,          TwilioSmsService>();
+builder.Services.AddScoped<TwilioSmsService>();
+builder.Services.AddScoped<ZaloOaSmsService>();
+builder.Services.AddScoped<ISmsService, CompositeSmsService>(); // KAN-11: Twilio + Zalo fallback
 builder.Services.AddScoped<IEmailService,        SendGridEmailService>();
 builder.Services.AddScoped<IPaymentService,      VnPayPaymentService>();
 builder.Services.AddScoped<ICalendarSyncService, UnifiedCalendarSyncService>();
