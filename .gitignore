@@ -23,3 +23,6 @@ packages/
 ## Test Results
 TestResults/
 coverage/
+src/Presentation/wwwroot/node_modules/
+src/Presentation/wwwroot/package.json
+src/Presentation/wwwroot/package-lock.json

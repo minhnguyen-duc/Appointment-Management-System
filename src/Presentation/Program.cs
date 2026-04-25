@@ -59,8 +59,7 @@ builder.Services.AddScoped<RagClientService>();
 
 // ── Blazor ──
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveServerComponents();
 
 // ── Authentication & Authorization ──
 // KAN-11: Cookie-based session after OTP verification
@@ -102,7 +101,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode()
-   .AddInteractiveWebAssemblyRenderMode();
+   .AddInteractiveServerRenderMode();
 
 app.Run();

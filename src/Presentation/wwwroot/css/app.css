@@ -189,3 +189,20 @@
     .ams-sidebar { width: 200px; }
     .doctor-grid { grid-template-columns: 1fr; }
 }
+
+/* ── OTP boxes (KAN-11) ── */
+.otp-inputs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.otp-box {
+    width: 48px !important;
+    height: 56px !important;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+    padding: 0;
+    border-radius: 8px;
+}
+.otp-box:focus { border-color: #0d6efd; box-shadow: 0 0 0 .25rem rgba(13,110,253,.15); }
