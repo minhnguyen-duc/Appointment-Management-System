@@ -1,6 +1,6 @@
 using Application.Appointments.DTOs;
 using Application.Appointments.Queries;
-using Presentation.Services;
+using Application.Common.DTOs;
 
 namespace Application.Common.Interfaces;
 

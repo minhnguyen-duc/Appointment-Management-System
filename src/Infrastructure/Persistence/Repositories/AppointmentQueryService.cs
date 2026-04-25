@@ -3,7 +3,7 @@ using Application.Appointments.Queries;
 using Application.Common.Interfaces;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using Presentation.Services;
+using Application.Common.DTOs;
 
 namespace Infrastructure.Persistence.Repositories;
 
