@@ -96,11 +96,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// .NET 9/10: serve Blazor framework files (_framework/blazor.web.js etc.)
+// UseStaticWebAssets ensures NuGet-sourced static assets are served in all environments
+if (!app.Environment.IsProduction())
+    app.UseStaticWebAssets();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode(); // WASM mode omitted: no .Client project (see arch spec §2.1)
+   .AddInteractiveServerRenderMode() // WASM mode omitted: no .Client project (see arch spec §2.1)
+   .WithStaticAssets();
 
 app.Run();
