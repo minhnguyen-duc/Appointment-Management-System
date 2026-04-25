@@ -101,6 +101,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode();
+   .AddInteractiveServerRenderMode(); // WASM mode omitted: no .Client project (see arch spec §2.1)
 
 app.Run();

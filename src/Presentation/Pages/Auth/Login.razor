@@ -3,139 +3,112 @@
 @inject AuthService AuthService
 @inject NavigationManager Nav
 
-@* KAN-11: OTP Authentication Login page
-   AC1: phone validation in EnterPhoneForm (Vietnam format)
-   AC2: OTP sent via SMS/Zalo gateway (SLA 30s)
-   AC3: rate-limit 3 resends / 10 min, lock UI shown in VerifyOtpForm
-   AC4: on success, redirect to BENHNHAN dashboard or registration
-*@
+<PageTitle>Đăng nhập — AMS 2026</PageTitle>
 
-<PageTitle>Đăng nhập — MediCare AMS</PageTitle>
+<div class="auth-card">
 
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <div class="auth-logo">
-            <div class="auth-logo-icon">
-                <i class="bi bi-hospital text-primary fs-1"></i>
-            </div>
-            <h4 class="mt-2 mb-0">Appointment Management</h4>
-            <p class="text-muted small">Hệ thống đặt lịch khám bệnh 2026</p>
+    <div class="auth-logo">
+        <div style="width:48px;height:48px;background:var(--ams-primary-bg);border-radius:12px;
+                    display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
+            <i class="bi bi-hospital text-primary fs-4"></i>
         </div>
-
-        @if (_step == AuthStep.EnterPhone)
-        {
-            <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
-        }
-        else
-        {
-            <VerifyOtpForm @ref="_verifyForm"
-                           PhoneNumber="@_phone"
-                           OnSubmit="VerifyOtp"
-                           OnResend="RequestOtpResend"
-                           IsLoading="_loading"
-                           ResendUsed="_resendUsed"
-                           ResendMax="3"
-                           IsLocked="_locked"
-                           LockedUntil="_lockedUntil" />
-        }
-
-        <ErrorAlert Message="@_error" />
-
-        @if (_step == AuthStep.VerifyOtp && !_locked)
-        {
-            <div class="text-center mt-3">
-                <button class="btn btn-link btn-sm text-muted" @onclick="BackToPhone">
-                    <i class="bi bi-arrow-left me-1"></i>Đổi số điện thoại
-                </button>
-            </div>
-        }
+        <h4 class="mb-0">Appointment Management</h4>
+        <p class="text-muted small mb-0">Hệ thống đặt lịch khám bệnh 2026</p>
     </div>
+
+    @if (_step == Step.EnterPhone)
+    {
+        <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
+    }
+    else
+    {
+        <VerifyOtpForm @ref="_verifyForm"
+                       PhoneNumber="@_phone"
+                       OnSubmit="VerifyOtp"
+                       OnResend="ResendOtp"
+                       IsLoading="_loading"
+                       ResendUsed="_resendUsed"
+                       IsLocked="_locked"
+                       LockedUntil="_lockedUntil" />
+
+        <div class="text-center mt-2">
+            <button class="btn btn-link btn-sm text-muted p-0" @onclick="BackToPhone">
+                <i class="bi bi-arrow-left me-1"></i>Đổi số điện thoại
+            </button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="alert alert-danger mt-3 py-2 px-3 small mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>@_error</span>
+        </div>
+    }
 </div>
 
 @code {
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
 
-    private AuthStep _step = AuthStep.EnterPhone;
-    private string   _phone = "";
-    private bool     _loading;
-    private string   _error = "";
-    private int      _resendUsed;
-    private bool     _locked;
+    private Step _step = Step.EnterPhone;
+    private string _phone = "";
+    private bool _loading, _locked;
+    private string _error = "";
+    private int _resendUsed;
     private DateTime? _lockedUntil;
     private VerifyOtpForm? _verifyForm;
 
-    // AC2: initial OTP request
     private async Task RequestOtp(string phone)
     {
         _loading = true; _error = "";
         try
         {
             await AuthService.RequestOtpAsync(phone);
-            _phone = phone;
-            _resendUsed = 0;
-            _locked = false;
-            _step = AuthStep.VerifyOtp;
+            _phone = phone; _step = Step.VerifyOtp; _resendUsed = 0; _locked = false;
         }
         catch (Domain.Exceptions.OtpRateLimitExceededException ex)
         {
-            // AC3: show rate-limit lock
-            _locked = true;
-            _lockedUntil = ex.UnlockedAt;
-            _error = ex.Message;
+            _locked = true; _lockedUntil = ex.UnlockedAt; _error = ex.Message;
         }
-        catch (ArgumentException ex) { _error = ex.Message; } // AC1: invalid phone
+        catch (ArgumentException ex) { _error = ex.Message; }
         catch (Exception ex)         { _error = ex.Message; }
         finally { _loading = false; }
     }
 
-    // AC3: resend OTP (tracks count)
-    private async Task RequestOtpResend()
+    private async Task ResendOtp()
     {
         _loading = true; _error = "";
         try
         {
             await AuthService.RequestOtpAsync(_phone);
-            var status = await AuthService.GetResendStatusAsync(_phone);
-            _resendUsed = status.Used;
-            _locked = false;
+            var s = await AuthService.GetResendStatusAsync(_phone);
+            _resendUsed = s.Used; _locked = false;
             _verifyForm?.ClearError();
         }
         catch (Domain.Exceptions.OtpRateLimitExceededException ex)
         {
-            _locked = true;
-            _lockedUntil = ex.UnlockedAt;
-            _resendUsed = ex.MaxAttempts;
-            _error = ex.Message;
+            _locked = true; _lockedUntil = ex.UnlockedAt; _resendUsed = ex.MaxAttempts; _error = ex.Message;
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _loading = false; }
     }
 
-    // AC4: verify OTP → redirect to BENHNHAN interface
     private async Task VerifyOtp(string otp)
     {
         _loading = true; _error = "";
         try
         {
             var result = await AuthService.VerifyOtpAsync(_phone, otp);
-            // AC4: redirect sang giao diện BENHNHAN (dashboard hoặc đăng ký mới)
             Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl);
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-            _verifyForm?.SetError(ex.Message);
-        }
+        catch (Exception ex) { _error = ex.Message; _verifyForm?.SetError(ex.Message); }
         finally { _loading = false; }
     }
 
     private void BackToPhone()
     {
-        _step = AuthStep.EnterPhone;
-        _error = "";
-        _locked = false;
-        _resendUsed = 0;
+        _step = Step.EnterPhone; _error = ""; _locked = false; _resendUsed = 0;
     }
 
-    private enum AuthStep { EnterPhone, VerifyOtp }
+    private enum Step { EnterPhone, VerifyOtp }
 }
