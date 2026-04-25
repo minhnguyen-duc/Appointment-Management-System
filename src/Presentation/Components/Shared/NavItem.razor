@@ -1,0 +1,13 @@
+@inject NavigationManager Nav
+
+<NavLink class="nav-item" href="@Href" Match="@Match">
+    <i class="bi @Icon"></i>
+    <span>@Label</span>
+</NavLink>
+
+@code {
+    [Parameter] public string Href { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
+}

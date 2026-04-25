@@ -1,0 +1,56 @@
+@inject AppointmentClientService ApptService
+
+<div class="step-datetime">
+    <h6 class="mb-3">Chọn ngày & giờ khám</h6>
+
+    <div class="mb-3">
+        <label class="form-label">Ngày khám</label>
+        <input type="date" class="form-control"
+               min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+               @onchange="OnDateChanged" />
+    </div>
+
+    @if (_slots.Any())
+    {
+        <label class="form-label">Khung giờ còn trống</label>
+        <div class="slot-grid">
+            @foreach (var slot in _slots)
+            {
+                <button class="slot-btn @(slot.IsAvailable ? "" : "disabled")"
+                        disabled="@(!slot.IsAvailable)"
+                        @onclick="() => SelectSlot(slot)">
+                    @slot.StartTime.ToString("HH:mm")
+                </button>
+            }
+        </div>
+    }
+    else if (_dateSelected)
+    {
+        <p class="text-muted">Không có khung giờ trống trong ngày này.</p>
+    }
+
+    <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-outline-secondary" @onclick="OnBack">Quay lại</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid DoctorId { get; set; }
+    [Parameter] public EventCallback<DateTime> OnSelected { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private List<TimeSlotDto> _slots = [];
+    private bool _dateSelected;
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), out var date))
+        {
+            _dateSelected = true;
+            _slots = (await ApptService.GetAvailableSlotsAsync(DoctorId, date)).ToList();
+        }
+    }
+
+    private async Task SelectSlot(TimeSlotDto slot)
+        => await OnSelected.InvokeAsync(slot.StartTime);
+}

@@ -1,0 +1,32 @@
+@inject PaymentClientService PaymentService
+
+<div class="step-payment text-center py-4">
+    @if (_paymentUrl is null)
+    {
+        <LoadingSpinner Message="Đang tạo liên kết thanh toán..." />
+    }
+    else
+    {
+        <div class="payment-success">
+            <i class="bi bi-qr-code display-1 text-primary"></i>
+            <h5 class="mt-3">Quét QR hoặc nhấn nút để thanh toán</h5>
+            <p class="text-muted small">Đặt cọc qua VNPAY để giữ lịch hẹn</p>
+            <a href="@_paymentUrl" class="btn btn-success btn-lg mt-2" target="_blank">
+                <i class="bi bi-credit-card me-2"></i>Thanh toán ngay
+            </a>
+            <div class="mt-3">
+                <a href="/appointments/@AppointmentId" class="text-muted small">
+                    Bỏ qua, thanh toán sau
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid AppointmentId { get; set; }
+    private string? _paymentUrl;
+
+    protected override async Task OnInitializedAsync()
+        => _paymentUrl = await PaymentService.CreateUrlAsync(AppointmentId);
+}

@@ -1,0 +1,62 @@
+@page "/"
+@attribute [Authorize]
+@inject AppointmentClientService ApptService
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <StatCard Title="Lịch hôm nay" Value="@_stats.TodayCount.ToString()"
+                  Icon="bi-calendar-day" Color="primary" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <StatCard Title="Chờ xác nhận" Value="@_stats.PendingCount.ToString()"
+                  Icon="bi-hourglass-split" Color="warning" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <StatCard Title="Hoàn thành" Value="@_stats.CompletedToday.ToString()"
+                  Icon="bi-check-circle" Color="success" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <StatCard Title="Đã huỷ" Value="@_stats.CancelledToday.ToString()"
+                  Icon="bi-x-circle" Color="danger" />
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Lịch hẹn hôm nay</h6>
+                <a href="/appointments" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+            </div>
+            <div class="card-body p-0">
+                @if (_loading) { <LoadingSpinner /> }
+                else { <AppointmentTable Appointments="_todayAppointments" Compact="true" /> }
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Bác sĩ trực hôm nay</h6></div>
+            <div class="card-body">
+                <DoctorOnDutyList Doctors="_onDutyDoctors" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DashboardStats _stats = new();
+    private List<AppointmentDto> _todayAppointments = [];
+    private List<DoctorDto> _onDutyDoctors = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _stats = await ApptService.GetDashboardStatsAsync();
+        _todayAppointments = await ApptService.GetTodayAppointmentsAsync();
+        _onDutyDoctors = await ApptService.GetOnDutyDoctorsAsync();
+        _loading = false;
+    }
+}

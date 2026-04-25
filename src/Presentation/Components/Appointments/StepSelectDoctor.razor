@@ -1,0 +1,43 @@
+<div class="step-select-doctor">
+    <h6 class="mb-3">Chọn bác sĩ</h6>
+
+    <div class="mb-3">
+        <input type="search" class="form-control" placeholder="Tìm theo tên hoặc chuyên khoa..."
+               @oninput="OnSearch" />
+    </div>
+
+    <div class="doctor-grid">
+        @foreach (var doc in _filtered)
+        {
+            <button class="doctor-card @(Selected == doc.Id ? "selected" : "")"
+                    @onclick="() => OnSelected.InvokeAsync(doc.Id)">
+                <div class="doctor-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div class="doctor-info">
+                    <strong>@doc.FullName</strong>
+                    <span class="text-muted small">@doc.Specialization</span>
+                </div>
+                @if (Selected == doc.Id)
+                { <i class="bi bi-check-circle-fill text-primary ms-auto"></i> }
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<DoctorDto> Doctors { get; set; } = [];
+    [Parameter] public Guid Selected { get; set; }
+    [Parameter] public EventCallback<Guid> OnSelected { get; set; }
+
+    private List<DoctorDto> _filtered = [];
+    protected override void OnParametersSet() => _filtered = Doctors;
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        var q = e.Value?.ToString()?.ToLower() ?? "";
+        _filtered = Doctors.Where(d =>
+            d.FullName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+            d.Specialization.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+}

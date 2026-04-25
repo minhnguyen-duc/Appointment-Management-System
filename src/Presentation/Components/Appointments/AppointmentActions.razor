@@ -1,0 +1,49 @@
+@using Domain.Enums
+
+<div class="card @Class">
+    <div class="card-header"><h6 class="mb-0">Thao tác</h6></div>
+    <div class="card-body d-grid gap-2">
+        @if (Appointment.Status == AppointmentStatus.Pending)
+        {
+            <button class="btn btn-success" @onclick="Confirm">
+                <i class="bi bi-check-lg me-1"></i>Xác nhận
+            </button>
+        }
+        @if (Appointment.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed)
+        {
+            <button class="btn btn-outline-danger" @onclick="() => _showConfirm = true">
+                <i class="bi bi-x-lg me-1"></i>Huỷ lịch
+            </button>
+        }
+    </div>
+</div>
+
+<ConfirmDialog Visible="_showConfirm"
+               Title="Huỷ lịch hẹn"
+               Message="Bạn có chắc muốn huỷ lịch hẹn này không?"
+               ConfirmText="Huỷ lịch"
+               OnConfirm="Cancel"
+               OnCancel="() => _showConfirm = false" />
+
+@code {
+    [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+    [Parameter] public EventCallback OnConfirmed { get; set; }
+    [Parameter] public EventCallback OnCancelled { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Inject] AppointmentClientService ApptService { get; set; } = null!;
+
+    private bool _showConfirm;
+
+    private async Task Confirm()
+    {
+        await ApptService.ConfirmAsync(Appointment.Id);
+        await OnConfirmed.InvokeAsync();
+    }
+
+    private async Task Cancel()
+    {
+        _showConfirm = false;
+        await ApptService.CancelAsync(Appointment.Id);
+        await OnCancelled.InvokeAsync();
+    }
+}

@@ -1,0 +1,60 @@
+@page "/appointments"
+@attribute [Authorize]
+@inject AppointmentClientService ApptService
+@inject NavigationManager Nav
+
+<PageTitle>Danh sách lịch hẹn</PageTitle>
+
+<div class="page-header mb-4">
+    <div>
+        <h4 class="mb-0">Lịch hẹn</h4>
+        <p class="text-muted small">Quản lý toàn bộ lịch hẹn</p>
+    </div>
+    <a href="/appointments/new" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Đặt lịch mới
+    </a>
+</div>
+
+<AppointmentFilter Filter="_filter" OnChanged="OnFilterChanged" />
+
+<div class="card mt-3">
+    <div class="card-body p-0">
+        @if (_loading) { <LoadingSpinner Message="Đang tải lịch hẹn..." /> }
+        else if (!_appointments.Any())
+        { <EmptyState Icon="bi-calendar-x" Message="Không có lịch hẹn nào" /> }
+        else
+        {
+            <AppointmentTable Appointments="_appointments"
+                              OnCancel="CancelAppointment"
+                              OnView="id => Nav.NavigateTo($"/appointments/{id}")" />
+            <Pagination CurrentPage="_page" TotalPages="_totalPages" OnPageChanged="ChangePage" />
+        }
+    </div>
+</div>
+
+@code {
+    private List<AppointmentDto> _appointments = [];
+    private AppointmentFilterModel _filter = new();
+    private bool _loading = true;
+    private int _page = 1;
+    private int _totalPages = 1;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var result = await ApptService.GetPagedAsync(_filter, _page);
+        _appointments = result.Items;
+        _totalPages = result.TotalPages;
+        _loading = false;
+    }
+
+    private async Task OnFilterChanged(AppointmentFilterModel f) { _filter = f; _page = 1; await LoadAsync(); }
+    private async Task ChangePage(int p) { _page = p; await LoadAsync(); }
+    private async Task CancelAppointment(Guid id)
+    {
+        await ApptService.CancelAsync(id);
+        await LoadAsync();
+    }
+}

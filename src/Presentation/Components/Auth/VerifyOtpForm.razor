@@ -1,0 +1,52 @@
+<div class="auth-form">
+    <h5>Nhập mã xác thực</h5>
+    <p class="text-muted small">
+        Mã OTP đã được gửi đến <strong>@PhoneNumber</strong>
+    </p>
+
+    <div class="otp-inputs mb-3">
+        @for (int i = 0; i < 6; i++)
+        {
+            var idx = i;
+            <input type="text" maxlength="1" class="otp-box form-control"
+                   @ref="_inputs[idx]"
+                   @oninput="e => OnInput(e, idx)"
+                   @onkeydown="e => OnKeyDown(e, idx)"
+                   disabled="@IsLoading" />
+        }
+    </div>
+
+    <button class="btn btn-primary w-100 btn-lg"
+            @onclick="Submit"
+            disabled="@(IsLoading || _otp.Length < 6)">
+        @if (IsLoading)
+        { <span class="spinner-border spinner-border-sm me-2"></span> }
+        Xác nhận
+    </button>
+
+    <div class="text-center mt-3">
+        <CountdownResend OnResend="OnResend" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public string PhoneNumber { get; set; } = "";
+    [Parameter] public EventCallback<string> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnResend { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+
+    private readonly ElementReference[] _inputs = new ElementReference[6];
+    private string _otp = "";
+
+    private void OnInput(ChangeEventArgs e, int idx)
+    {
+        var val = e.Value?.ToString() ?? "";
+        if (val.Length > 0)
+            _otp = _otp.PadRight(idx + 1).Remove(idx, 1).Insert(idx, val[^1].ToString());
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e, int idx)
+    { if (e.Key == "Enter" && _otp.Length == 6) await Submit(); }
+
+    private async Task Submit() => await OnSubmit.InvokeAsync(_otp);
+}

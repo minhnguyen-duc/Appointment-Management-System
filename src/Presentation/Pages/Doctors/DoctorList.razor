@@ -1,0 +1,57 @@
+@page "/doctors"
+@attribute [Authorize]
+@inject DoctorClientService DoctorService
+@inject NavigationManager Nav
+
+<PageTitle>Bác sĩ</PageTitle>
+
+<div class="page-header mb-4">
+    <h4 class="mb-0">Bác sĩ</h4>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <input type="search" class="form-control" placeholder="Tìm tên bác sĩ..."
+               @bind="_search" @bind:event="oninput" @oninput="() => Reload()" />
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" @bind="_specialization" @bind:after="Reload">
+            <option value="">Tất cả chuyên khoa</option>
+            @foreach (var s in _specializations)
+            { <option value="@s">@s</option> }
+        </select>
+    </div>
+</div>
+
+<div class="row g-4">
+    @if (_loading) { <LoadingSpinner /> }
+    else
+    {
+        @foreach (var doc in _doctors)
+        {
+            <div class="col-md-6 col-xl-4">
+                <DoctorCard Doctor="doc" OnView="() => Nav.NavigateTo($"/doctors/{doc.Id}")" />
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<DoctorDto> _doctors = [];
+    private List<string> _specializations = [];
+    private string _search = "", _specialization = "";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _specializations = await DoctorService.GetSpecializationsAsync();
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _doctors = await DoctorService.GetAllAsync(_search, _specialization);
+        _loading = false;
+    }
+}

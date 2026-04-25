@@ -1,0 +1,27 @@
+@using Domain.Enums
+
+<span class="badge @GetClass()">@GetLabel()</span>
+
+@code {
+    [Parameter] public AppointmentStatus Status { get; set; }
+
+    private string GetClass() => Status switch
+    {
+        AppointmentStatus.Pending   => "bg-warning text-dark",
+        AppointmentStatus.Confirmed => "bg-success",
+        AppointmentStatus.Cancelled => "bg-danger",
+        AppointmentStatus.Completed => "bg-secondary",
+        AppointmentStatus.NoShow    => "bg-dark",
+        _ => "bg-light text-dark"
+    };
+
+    private string GetLabel() => Status switch
+    {
+        AppointmentStatus.Pending   => "Chờ xác nhận",
+        AppointmentStatus.Confirmed => "Đã xác nhận",
+        AppointmentStatus.Cancelled => "Đã huỷ",
+        AppointmentStatus.Completed => "Hoàn thành",
+        AppointmentStatus.NoShow    => "Vắng mặt",
+        _ => Status.ToString()
+    };
+}

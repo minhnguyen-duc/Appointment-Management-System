@@ -1,0 +1,36 @@
+<div class="monthly-calendar">
+    <div class="calendar-grid">
+        @foreach (var label in new[]{"CN","T2","T3","T4","T5","T6","T7"})
+        {
+            <div class="cal-header">@label</div>
+        }
+        @foreach (var day in GetCalendarDays())
+        {
+            var dayAppts = GetAppointmentsForDay(day);
+            <div class="cal-day @(day.Month != Month.Month ? "other-month" : "") @(day == DateOnly.FromDateTime(DateTime.Today) ? "today" : "")">
+                <span class="cal-date">@day.Day</span>
+                @foreach (var a in dayAppts.Take(3))
+                {
+                    <div class="cal-event">@a.ScheduledAt.ToString("HH:mm") @a.DoctorName</div>
+                }
+                @if (dayAppts.Count > 3)
+                { <div class="cal-more">+@(dayAppts.Count - 3) khác</div> }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public DateOnly Month { get; set; }
+    [Parameter] public List<AppointmentDto> Appointments { get; set; } = [];
+
+    private IEnumerable<DateOnly> GetCalendarDays()
+    {
+        var first = new DateOnly(Month.Year, Month.Month, 1);
+        var start = first.AddDays(-(int)first.DayOfWeek);
+        return Enumerable.Range(0, 42).Select(i => start.AddDays(i));
+    }
+
+    private List<AppointmentDto> GetAppointmentsForDay(DateOnly day)
+        => Appointments.Where(a => DateOnly.FromDateTime(a.ScheduledAt) == day).ToList();
+}

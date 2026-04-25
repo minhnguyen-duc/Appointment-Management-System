@@ -1,0 +1,24 @@
+<div class="card @Class">
+    <div class="card-header"><h6 class="mb-0">Thanh toán</h6></div>
+    <div class="card-body">
+        @if (Appointment.PaymentReference is not null)
+        {
+            <span class="badge bg-success">Đã thanh toán</span>
+            <div class="text-muted small mt-1">Ref: @Appointment.PaymentReference</div>
+        }
+        else
+        {
+            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+            <div class="mt-2">
+                <a href="/appointments/@Appointment.Id/pay" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-credit-card me-1"></i>Thanh toán VNPAY
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+    [Parameter] public string? Class { get; set; }
+}

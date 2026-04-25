@@ -1,0 +1,30 @@
+@page "/appointments/new"
+@attribute [Authorize]
+@inject AppointmentClientService ApptService
+@inject NavigationManager Nav
+
+<PageTitle>Đặt lịch khám</PageTitle>
+
+<div class="page-header mb-4">
+    <h4 class="mb-0">Đặt lịch khám mới</h4>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <BookingWizard OnCompleted="OnBooked" />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <BookingSummaryCard Model="_summary" />
+    </div>
+</div>
+
+@code {
+    private BookingSummaryModel _summary = new();
+
+    private void OnBooked(Guid appointmentId)
+        => Nav.NavigateTo($"/appointments/{appointmentId}?booked=true");
+}

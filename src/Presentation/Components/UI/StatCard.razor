@@ -1,0 +1,20 @@
+<div class="card stat-card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <p class="text-muted small mb-1">@Title</p>
+                <h3 class="mb-0 fw-bold">@Value</h3>
+            </div>
+            <div class="stat-icon text-@Color">
+                <i class="bi @Icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string Icon { get; set; } = "bi-graph-up";
+    [Parameter] public string Color { get; set; } = "primary";
+}

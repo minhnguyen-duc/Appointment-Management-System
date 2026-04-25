@@ -1,0 +1,56 @@
+@inject AppointmentClientService ApptService
+@inject DoctorClientService DoctorService
+
+<div class="booking-wizard">
+    <WizardSteps CurrentStep="_step" Steps='["Chọn bác sĩ","Chọn ngày giờ","Xác nhận","Thanh toán"]' />
+
+    <div class="wizard-body mt-4">
+        @switch (_step)
+        {
+            case 1:
+                <StepSelectDoctor Doctors="_doctors"
+                                  Selected="_model.DoctorId"
+                                  OnSelected="d => { _model.DoctorId = d; NextStep(); }" />
+                break;
+            case 2:
+                <StepSelectDateTime DoctorId="_model.DoctorId"
+                                    OnSelected="dt => { _model.ScheduledAt = dt; NextStep(); }"
+                                    OnBack="PrevStep" />
+                break;
+            case 3:
+                <StepConfirm Model="_model" OnConfirm="Book" OnBack="PrevStep" IsLoading="_loading" />
+                break;
+            case 4:
+                <StepPayment AppointmentId="_newId" />
+                break;
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<Guid> OnCompleted { get; set; }
+
+    private int _step = 1;
+    private BookingFormModel _model = new();
+    private List<DoctorDto> _doctors = [];
+    private bool _loading;
+    private Guid _newId;
+
+    protected override async Task OnInitializedAsync()
+        => _doctors = await DoctorService.GetAllAsync();
+
+    private void NextStep() => _step++;
+    private void PrevStep() => _step--;
+
+    private async Task Book()
+    {
+        _loading = true;
+        try
+        {
+            _newId = await ApptService.BookAsync(_model);
+            _step = 4;
+            await OnCompleted.InvokeAsync(_newId);
+        }
+        finally { _loading = false; }
+    }
+}

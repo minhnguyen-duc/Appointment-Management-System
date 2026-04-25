@@ -1,0 +1,32 @@
+<div class="auth-form">
+    <h5>Xác thực số điện thoại</h5>
+    <p class="text-muted small">Nhập số điện thoại để nhận mã OTP</p>
+
+    <div class="mb-3">
+        <label class="form-label">Số điện thoại</label>
+        <input type="tel" class="form-control form-control-lg"
+               placeholder="0912 345 678"
+               @bind="_phone" @bind:event="oninput"
+               @onkeydown="OnKeyDown"
+               disabled="@IsLoading" />
+    </div>
+
+    <button class="btn btn-primary w-100 btn-lg"
+            @onclick="Submit"
+            disabled="@(IsLoading || string.IsNullOrWhiteSpace(_phone))">
+        @if (IsLoading)
+        { <span class="spinner-border spinner-border-sm me-2"></span> }
+        Nhận mã OTP
+    </button>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnSubmit { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+
+    private string _phone = "";
+
+    private async Task Submit() => await OnSubmit.InvokeAsync(_phone);
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    { if (e.Key == "Enter") await Submit(); }
+}

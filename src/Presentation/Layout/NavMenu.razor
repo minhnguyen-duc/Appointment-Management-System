@@ -1,0 +1,32 @@
+@inject NavigationManager Nav
+
+<aside class="ams-sidebar">
+    <div class="ams-logo">
+        <img src="images/logo.svg" alt="AMS" />
+        <span>AMS 2026</span>
+    </div>
+
+    <nav class="ams-nav">
+        <NavSection Title="Tổng quan">
+            <NavItem Href="/" Icon="bi-speedometer2" Label="Dashboard" Match="NavLinkMatch.All" />
+        </NavSection>
+
+        <NavSection Title="Đặt lịch">
+            <NavItem Href="/appointments" Icon="bi-calendar-check" Label="Lịch hẹn" />
+            <NavItem Href="/appointments/new" Icon="bi-calendar-plus" Label="Đặt lịch mới" />
+            <NavItem Href="/appointments/calendar" Icon="bi-calendar3" Label="Lịch tháng" />
+        </NavSection>
+
+        <NavSection Title="Quản lý">
+            <NavItem Href="/patients" Icon="bi-people" Label="Bệnh nhân" />
+            <NavItem Href="/doctors" Icon="bi-person-badge" Label="Bác sĩ" />
+        </NavSection>
+
+        <NavSection Title="Tiện ích">
+            <NavItem Href="/medical-faq" Icon="bi-robot" Label="Hỏi đáp y tế (AI)" />
+        </NavSection>
+    </nav>
+</aside>
+
+@code {
+}

@@ -1,0 +1,30 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Họ tên</th>
+                <th>Số điện thoại</th>
+                <th>Email</th>
+                <th>Ngày sinh</th>
+                <th>Lịch hẹn</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Patients)
+            {
+                <tr @onclick="() => OnView.InvokeAsync(p.Id)" style="cursor:pointer">
+                    <td><span class="fw-semibold">@p.FullName</span></td>
+                    <td>@p.PhoneNumber</td>
+                    <td>@p.Email</td>
+                    <td>@p.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge bg-light text-dark">@p.AppointmentCount</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public List<PatientDto> Patients { get; set; } = [];
+    [Parameter] public EventCallback<Guid> OnView { get; set; }
+}
