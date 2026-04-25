@@ -17,6 +17,10 @@ using Presentation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Serve NuGet-sourced Blazor framework files (_framework/blazor.web.js) in all environments
+// Must be called on WebHostBuilder, not on WebApplication
+builder.WebHost.UseStaticWebAssets();
+
 // ── HttpContext ──
 builder.Services.AddHttpContextAccessor();
 
@@ -97,10 +101,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// .NET 9/10: serve Blazor framework files (_framework/blazor.web.js etc.)
-// UseStaticWebAssets ensures NuGet-sourced static assets are served in all environments
-if (!app.Environment.IsProduction())
-    app.UseStaticWebAssets();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
