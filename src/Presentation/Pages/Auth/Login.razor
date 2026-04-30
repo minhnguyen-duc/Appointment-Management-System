@@ -232,7 +232,7 @@
         _loading = true; _error = "";
         try
         {
-            var result = await AuthService.VerifyOtpAndSignInAsync(_phone, otp);
+            await AuthService.VerifyOtpAsync(_phone, otp);
             // OTP valid → proceed to set password
             _step = Step.SetPassword;
         }

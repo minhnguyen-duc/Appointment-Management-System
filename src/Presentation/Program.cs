@@ -13,6 +13,7 @@ using Infrastructure.ExternalServices.VnPay;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Services;
 
