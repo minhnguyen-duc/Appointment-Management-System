@@ -190,9 +190,9 @@
         _loading = true; _error = "";
         try
         {
-            var result = await AuthService.LoginWithPasswordAsync(_phone, password);
-            _toast?.Show("Đăng nhập thành công", "success");
-            Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl, forceLoad: true);
+            // forceLoad exits SignalR → /auth/do-login sets cookie in real HTTP context
+            var url = await AuthService.LoginWithPasswordAsync(_phone, password, ReturnUrl ?? "/benhnhan/dashboard");
+            Nav.NavigateTo(url, forceLoad: true);
         }
         catch (Domain.Exceptions.AccountLockedException ex)
         {
@@ -272,10 +272,8 @@
         _loading = true; _error = "";
         try
         {
-            var result = await AuthService.SetPasswordAsync(_phone, password);
-            _toast?.Show("Tạo tài khoản thành công", "success");
-            await Task.Delay(800);
-            Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl, forceLoad: true);
+            var url = await AuthService.SetPasswordAsync(_phone, password, ReturnUrl ?? "/benhnhan/dashboard");
+            Nav.NavigateTo(url, forceLoad: true);
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _loading = false; }

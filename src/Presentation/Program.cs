@@ -57,6 +57,9 @@ builder.Services.AddScoped<ICalendarSyncService, UnifiedCalendarSyncService>();
 builder.Services.AddScoped<IRagService,          RagService>();
 builder.Services.AddSingleton<IOtpService,       InMemoryOtpService>();
 
+// ── Auth ticket store (fixes Blazor SignalR/SignInAsync conflict) ──
+builder.Services.AddSingleton<Presentation.Services.PendingLoginStore>();
+
 // ── Presentation Services (Client) ──
 builder.Services.AddScoped<AppointmentClientService>();
 builder.Services.AddScoped<AuthService>();
@@ -113,5 +116,35 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode() // WASM mode omitted: no .Client project (see arch spec §2.1)
    .WithStaticAssets();
+
+// ── /auth/do-login: set cookie in real HTTP context (not SignalR) ──
+app.MapGet("/auth/do-login", async (
+    string ticket, string returnUrl, string? msg,
+    Presentation.Services.PendingLoginStore store,
+    HttpContext ctx) =>
+{
+    var claims = store.Consume(ticket);
+    if (claims is null)
+        return Results.Redirect("/auth/login?error=ticket_expired");
+
+    var identity  = new System.Security.Claims.ClaimsIdentity(claims, "Cookies");
+    var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+    await ctx.SignInAsync("Cookies", principal, new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+    {
+        IsPersistent = true,
+        ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(8),
+    });
+
+    var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/benhnhan/dashboard" : returnUrl;
+    if (!string.IsNullOrWhiteSpace(msg))
+        dest += (dest.Contains('?') ? "&" : "?") + "toast=" + Uri.EscapeDataString(msg);
+    return Results.Redirect(dest);
+});
+
+app.MapGet("/auth/logout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync("Cookies");
+    return Results.Redirect("/auth/login");
+});
 
 app.Run();
