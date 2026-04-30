@@ -136,9 +136,19 @@ app.MapGet("/auth/do-login", async (
         ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(8),
     });
 
-    var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/Homepage/HomePage" : returnUrl;
+    // Pass toast via short-lived cookie — keeps URL clean (no ?toast= visible in browser)
     if (!string.IsNullOrWhiteSpace(msg))
-        dest += (dest.Contains('?') ? "&" : "?") + "toast=" + Uri.EscapeDataString(msg);
+    {
+        ctx.Response.Cookies.Append("ams-toast", msg, new CookieOptions
+        {
+            MaxAge   = TimeSpan.FromSeconds(30),
+            Path     = "/",
+            SameSite = SameSiteMode.Lax,
+        });
+    }
+
+    // /homepage is the correct route for Homepage/Homepage.razor
+    var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/homepage" : returnUrl;
     return Results.Redirect(dest);
 });
 
