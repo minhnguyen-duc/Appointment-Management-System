@@ -135,7 +135,7 @@
     border-top-color: #fff; border-radius: 50%;
     animation: spin .6s linear infinite; margin-right: 6px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 @code {
@@ -192,7 +192,6 @@
         {
             var result = await AuthService.LoginWithPasswordAsync(_phone, password);
             _toast?.Show("Đăng nhập thành công", "success");
-            await Task.Delay(800); // let toast show briefly
             Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl, forceLoad: true);
         }
         catch (Domain.Exceptions.AccountLockedException ex)

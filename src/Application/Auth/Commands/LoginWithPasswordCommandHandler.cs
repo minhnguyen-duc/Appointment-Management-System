@@ -28,7 +28,7 @@ public class LoginWithPasswordCommandHandler(IPatientQueryService patientQuery, 
             SessionToken: $"session:{phone.Value}:{Guid.NewGuid()}",
             PatientId:    patient.Id,
             IsNewPatient: false,
-            RedirectUrl:  "/benhnhan/dashboard"
+            RedirectUrl:  "/Homepage/Homepage"
         );
     }
 }
