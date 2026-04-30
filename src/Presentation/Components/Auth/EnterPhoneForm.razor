@@ -1,45 +1,37 @@
 @using Domain.ValueObjects
 
-<div class="auth-form">
-    <h5>Xác thực số điện thoại</h5>
-    <p class="text-muted small">Nhập số điện thoại để nhận mã OTP qua SMS hoặc Zalo</p>
+<div class="form-title">Nhập số điện thoại</div>
+<div class="form-sub">Hệ thống sẽ gửi mã OTP 6 chữ số qua SMS để xác thực danh tính của bạn.</div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Số điện thoại</label>
-        <div class="input-group input-group-lg">
-            <span class="input-group-text">🇻🇳 +84</span>
-            <input type="tel"
-                   class="form-control @(_touched && !_isValid ? "is-invalid" : _touched && _isValid ? "is-valid" : "")"
-                   placeholder="0912 345 678"
-                   maxlength="10"
-                   inputmode="numeric"
-                   @bind="_phone"
-                   @bind:event="oninput"
-                   @onkeydown="OnKeyDown"
-                   @onblur="OnBlur"
-                   disabled="@IsLoading" />
-            @if (_touched && !_isValid)
-            {
-                <div class="invalid-feedback">
-                    Số điện thoại không hợp lệ. Vui lòng nhập đầu số Việt Nam (03x/05x/07x/08x/09x) gồm 10 chữ số.
-                </div>
-            }
-        </div>
-        <div class="form-text text-muted mt-1">
-            <i class="bi bi-info-circle me-1"></i>Hỗ trợ: 032–039, 056–059, 070/076–079, 08x, 09x
-        </div>
+<div class="input-group">
+    <div class="input-prefix">
+        🇻🇳 +84
     </div>
-
-    <button class="btn btn-primary w-100 btn-lg"
-            @onclick="Submit"
-            disabled="@(IsLoading || string.IsNullOrWhiteSpace(_phone) || (_touched && !_isValid))">
-        @if (IsLoading)
-        {
-            <span class="spinner-border spinner-border-sm me-2"></span>
-        }
-        <i class="bi bi-send me-1"></i> Nhận mã OTP
-    </button>
+    <input class="input-field"
+           type="tel"
+           placeholder="901 234 567"
+           maxlength="10"
+           inputmode="numeric"
+           @bind="_phone"
+           @bind:event="oninput"
+           @onkeydown="OnKeyDown"
+           @onblur="OnBlur"
+           disabled="@IsLoading" />
 </div>
+
+<div style="font-size:12px;color:var(--txt3);margin-bottom:20px;line-height:1.6;">
+    Bằng cách tiếp tục, bạn đồng ý với
+    <a href="#" style="color:var(--blue-txt);text-decoration:none;">Điều khoản dịch vụ</a>
+    và
+    <a href="#" style="color:var(--blue-txt);text-decoration:none;">Chính sách bảo mật</a>
+    của MediCare.
+</div>
+
+<button class="btn-primary"
+        @onclick="Submit"
+        disabled="@(IsLoading || string.IsNullOrWhiteSpace(_phone) || (_touched && !_isValid))">
+    Tiếp tục
+</button>
 
 @code {
     [Parameter] public EventCallback<string> OnSubmit { get; set; }

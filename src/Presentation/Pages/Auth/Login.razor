@@ -1,50 +1,94 @@
+
 @page "/auth/login"
 @layout EmptyLayout
 @inject AuthService AuthService
 @inject NavigationManager Nav
 
-<PageTitle>Đăng nhập — AMS 2026</PageTitle>
+<PageTitle>MediCare — Đăng nhập</PageTitle>
 
-<div class="auth-card">
+<link rel="stylesheet" href="css/login.css" />
 
-    <div class="auth-logo">
-        <div style="width:48px;height:48px;background:var(--ams-primary-bg);border-radius:12px;
-                    display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
-            <i class="bi bi-hospital text-primary fs-4"></i>
+<div class="login-root">
+    <div class="left">
+        <div class="left-header">
+            <a class="back-btn" href="#" @onclick="BackToPhone">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Quay lại
+            </a>
+            <a class="support-btn" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.64 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17z"/></svg>
+                Gọi hỗ trợ
+            </a>
         </div>
-        <h4 class="mb-0">Appointment Management</h4>
-        <p class="text-muted small mb-0">Hệ thống đặt lịch khám bệnh 2026</p>
+        <div class="form-area">
+            <div class="logo">
+                <div class="logo-mark">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M12 14v4"/><path d="M10 16h4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+                </div>
+                <div>
+                    <div class="logo-name">MediCare</div>
+                    <div class="logo-sub">Đặt khám nhanh · An toàn</div>
+                </div>
+            </div>
+
+            @if (_step == Step.EnterPhone)
+            {
+                <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
+            }
+            else
+            {
+                <VerifyOtpForm @ref="_verifyForm"
+                                             PhoneNumber="@_phone"
+                                             OnSubmit="VerifyOtp"
+                                             OnResend="ResendOtp"
+                                             IsLoading="_loading"
+                                             ResendUsed="_resendUsed"
+                                             IsLocked="_locked"
+                                             LockedUntil="_lockedUntil" />
+
+                <div class="text-center mt-2">
+                    <button class="btn btn-link btn-sm text-muted p-0" @onclick="BackToPhone">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        Đổi số điện thoại
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="alert alert-danger mt-3 py-2 px-3 small mb-0 d-flex align-items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    <span>@_error</span>
+                </div>
+            }
+        </div>
+        <div class="left-footer">
+            <span>© 2026 MediCare</span>
+            <a href="#">Chính sách bảo mật</a>
+        </div>
     </div>
-
-    @if (_step == Step.EnterPhone)
-    {
-        <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
-    }
-    else
-    {
-        <VerifyOtpForm @ref="_verifyForm"
-                       PhoneNumber="@_phone"
-                       OnSubmit="VerifyOtp"
-                       OnResend="ResendOtp"
-                       IsLoading="_loading"
-                       ResendUsed="_resendUsed"
-                       IsLocked="_locked"
-                       LockedUntil="_lockedUntil" />
-
-        <div class="text-center mt-2">
-            <button class="btn btn-link btn-sm text-muted p-0" @onclick="BackToPhone">
-                <i class="bi bi-arrow-left me-1"></i>Đổi số điện thoại
-            </button>
+    <div class="right">
+        <div class="right-bg"></div>
+        <div class="right-content">
+            <div class="tagline-small">Hệ thống đặt lịch khám bệnh</div>
+            <div class="tagline-main">Khám bệnh <em>nhanh chóng</em>, <span class="tagline-strike">không chờ đợi</span></div>
+            <div class="tagline-sub">Đăng nhập để sử dụng các dịch vụ đặt lịch, tư vấn AI, và quản lý hồ sơ sức khoẻ của bạn.</div>
+            <div class="feature-pills">
+                <div class="feature-pill"><span class="dot" style="background:#185FA5"></span> OTP qua SMS/Zalo</div>
+                <div class="feature-pill"><span class="dot" style="background:#0F6E56"></span> Bảo mật thông tin</div>
+                <div class="feature-pill"><span class="dot" style="background:#A32D2D"></span> Hỗ trợ 24/7</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-item"><div class="stat-num">12K+</div><div class="stat-label">Bệnh nhân</div></div>
+                <div class="stat-item"><div class="stat-num">2K+</div><div class="stat-label">Bác sĩ</div></div>
+                <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Hài lòng</div></div>
+            </div>
         </div>
-    }
-
-    @if (!string.IsNullOrEmpty(_error))
-    {
-        <div class="alert alert-danger mt-3 py-2 px-3 small mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-exclamation-circle-fill"></i>
-            <span>@_error</span>
-        </div>
-    }
+        <div class="right-badge"><span class="pulse"></span><span class="badge-txt">Online</span><span class="badge-num">24/7</span></div>
+        <div class="deco-circle" style="width:80px;height:80px;top:40px;right:80px;"></div>
+        <div class="deco-circle" style="width:40px;height:40px;bottom:60px;left:60px;"></div>
+        <div class="float-card" style="display:none"></div>
+    </div>
 </div>
 
 @code {

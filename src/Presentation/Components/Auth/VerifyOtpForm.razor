@@ -1,73 +1,71 @@
 @inject IJSRuntime JS
 
-@* AC3 - KAN-11: Hiển thị số lần gửi lại còn lại và trạng thái khoá *@
-@* AC4 - KAN-11: Gọi OnSubmit với 6 chữ số OTP *@
+<div class="form-title">Nhập mã xác thực</div>
+<div class="form-sub">Mã OTP 6 chữ số đã được gửi đến</div>
 
-<div class="auth-form">
-    <h5>Nhập mã xác thực</h5>
-    <p class="text-muted small">
-        Mã OTP đã được gửi đến <strong>@PhoneNumber</strong> qua SMS/Zalo.
-        <br />Mã có hiệu lực trong <strong>2 phút</strong>.
-    </p>
-
-    @if (IsLocked)
-    {
-        <div class="alert alert-danger d-flex align-items-center gap-2">
-            <i class="bi bi-lock-fill fs-5"></i>
-            <div>
-                <strong>Tài khoản tạm thời bị khoá</strong><br />
-                <small>Bạn đã gửi lại OTP quá @ResendMax lần. Vui lòng thử lại sau khi hết thời gian khoá.</small>
-            </div>
-        </div>
-    }
-
-    <div class="otp-inputs mb-2 @(IsLocked ? "opacity-50 pe-none" : "")">
-        @for (int i = 0; i < 6; i++)
-        {
-            var idx = i;
-            <input type="text"
-                   maxlength="1"
-                   inputmode="numeric"
-                   pattern="[0-9]*"
-                   class="otp-box form-control @(_hasError ? "is-invalid" : "")"
-                   @ref="_inputs[idx]"
-                   @oninput="e => OnInput(e, idx)"
-                   @onkeydown="e => OnKeyDown(e, idx)"
-                   @onpaste="e => OnPaste(e)"
-                   disabled="@(IsLoading || IsLocked)" />
-        }
+<div class="phone-display">
+    <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:2px;">Số điện thoại</div>
+        <div class="num">@PhoneNumber</div>
     </div>
+</div>
 
-    @if (_hasError)
+<div class="otp-row" @class="{ 'opacity-50 pe-none': IsLocked }">
+    @for (int i = 0; i < 6; i++)
     {
-        <div class="text-danger small mb-2">
-            <i class="bi bi-exclamation-triangle me-1"></i>@_errorMsg
-        </div>
+        var idx = i;
+        <input class="otp-box @(_hasError ? "is-invalid" : "")"
+               type="text"
+               maxlength="1"
+               inputmode="numeric"
+               pattern="[0-9]*"
+               id="otp-box-@idx"
+               @ref="_inputs[idx]"
+               @oninput="e => OnInput(e, idx)"
+               @onkeydown="e => OnKeyDown(e, idx)"
+               @onpaste="e => OnPaste(e)"
+               disabled="@(IsLoading || IsLocked)" />
     }
+</div>
 
-    <button class="btn btn-primary w-100 btn-lg mb-2"
-            @onclick="Submit"
-            disabled="@(IsLoading || _otp.Replace(" ","").Length < 6 || IsLocked)">
-        @if (IsLoading)
-        {
-            <span class="spinner-border spinner-border-sm me-2"></span>
-        }
-        <i class="bi bi-check-circle me-1"></i> Xác nhận
-    </button>
+@if (IsLocked)
+{
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:20px;line-height:1.6;">
+        Tài khoản tạm thời bị khoá. Bạn đã gửi lại OTP quá @ResendMax lần. Vui lòng thử lại sau.
+    </div>
+}
 
-    <div class="text-center">
+@if (_hasError)
+{
+    <div style="font-size:12px;color:#991B1B;margin-bottom:12px;">@_errorMsg</div>
+}
+
+<div class="resend-row">
+    <span>
         <CountdownResend OnResend="OnResend"
                          ResendUsed="@ResendUsed"
                          ResendMax="@ResendMax"
                          IsLocked="@IsLocked"
                          LockedUntil="@LockedUntil" />
-    </div>
+    </span>
 </div>
+
+<button class="btn-primary"
+        @onclick="Submit"
+        disabled="@(IsLoading || _otp.Replace(" ","").Length < 6 || IsLocked)">
+    Xác nhận
+</button>
+<button class="btn-ghost"
+        @onclick="@(async () => await OnCancel.InvokeAsync())"
+        disabled="@IsLoading">
+    Quay lại
+</button>
 
 @code {
     [Parameter] public string PhoneNumber { get; set; } = "";
     [Parameter] public EventCallback<string> OnSubmit { get; set; }
     [Parameter] public EventCallback OnResend { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public int ResendUsed { get; set; }
     [Parameter] public int ResendMax { get; set; } = 3;

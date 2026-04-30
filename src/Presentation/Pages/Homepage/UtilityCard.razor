@@ -1,0 +1,32 @@
+<div class="util-card" tabindex="0" @onclick="HandleClick">
+    <div class="util-icon">
+        @if (Name == "Tra cứu phiếu")
+        {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        }
+        else if (Name == "Tư vấn online")
+        {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        }
+        else if (Name == "Hồ sơ bệnh")
+        {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>
+        }
+    </div>
+    <div class="util-name">@Name</div>
+    <div class="util-sub">@Sub</div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Name { get; set; }
+
+    [Parameter]
+    public string? Sub { get; set; }
+
+    private void HandleClick()
+    {
+        // Handle utility action
+    }
+}
+
