@@ -47,7 +47,7 @@ public class VerifyOtpCommandHandlerTests
         result.SessionToken.Should().StartWith("session:0912345678:");
         result.PatientId.Should().Be(patientId);
         result.IsNewPatient.Should().BeFalse();
-        result.RedirectUrl.Should().Be("/benhnhan/dashboard");
+        result.RedirectUrl.Should().Be("/Homepage/HomePage");
     }
 
     // ── AC4: Successful verification — new patient ────────────────────────────

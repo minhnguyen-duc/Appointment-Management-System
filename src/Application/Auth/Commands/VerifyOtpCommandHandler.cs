@@ -25,7 +25,7 @@ public class VerifyOtpCommandHandler(IOtpService otpService, IPatientQueryServic
             SessionToken: $"session:{phone.Value}:{Guid.NewGuid()}",
             PatientId: patient?.Id,
             IsNewPatient: patient is null,
-            RedirectUrl: patient is null ? "/benhnhan/register" : "/benhnhan/dashboard"
+            RedirectUrl: patient is null ? "/benhnhan/register" : "/Homepage/HomePage"
         );
     }
 }

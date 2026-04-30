@@ -31,7 +31,7 @@ public class SetPasswordCommandHandler(IPatientQueryService patientQuery, IPatie
             SessionToken: $"session:{phone.Value}:{Guid.NewGuid()}",
             PatientId:    patient.Id,
             IsNewPatient: true,
-            RedirectUrl:  "/benhnhan/dashboard"
+            RedirectUrl:  "/Homepage/HomePage"
         );
     }
 }

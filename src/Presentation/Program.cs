@@ -136,7 +136,7 @@ app.MapGet("/auth/do-login", async (
         ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(8),
     });
 
-    var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/benhnhan/dashboard" : returnUrl;
+    var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/Homepage/HomePage" : returnUrl;
     if (!string.IsNullOrWhiteSpace(msg))
         dest += (dest.Contains('?') ? "&" : "?") + "toast=" + Uri.EscapeDataString(msg);
     return Results.Redirect(dest);

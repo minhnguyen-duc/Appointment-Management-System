@@ -191,7 +191,7 @@
         try
         {
             // forceLoad exits SignalR → /auth/do-login sets cookie in real HTTP context
-            var url = await AuthService.LoginWithPasswordAsync(_phone, password, ReturnUrl ?? "/benhnhan/dashboard");
+            var url = await AuthService.LoginWithPasswordAsync(_phone, password, ReturnUrl ?? "/Homepage/HomePage");
             Nav.NavigateTo(url, forceLoad: true);
         }
         catch (Domain.Exceptions.AccountLockedException ex)
@@ -272,7 +272,7 @@
         _loading = true; _error = "";
         try
         {
-            var url = await AuthService.SetPasswordAsync(_phone, password, ReturnUrl ?? "/benhnhan/dashboard");
+            var url = await AuthService.SetPasswordAsync(_phone, password, ReturnUrl ?? "/Homepage/HomePage");
             Nav.NavigateTo(url, forceLoad: true);
         }
         catch (Exception ex) { _error = ex.Message; }
