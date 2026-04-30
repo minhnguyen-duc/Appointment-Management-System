@@ -152,6 +152,20 @@ app.MapGet("/auth/do-login", async (
     return Results.Redirect(dest);
 });
 
+// ── /auth/do-logout: sign out, show toast, stay on homepage ──
+app.MapGet("/auth/do-logout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync("Cookies");
+    ctx.Response.Cookies.Append("ams-toast", "Bạn đã đăng xuất thành công", new CookieOptions
+    {
+        MaxAge   = TimeSpan.FromSeconds(30),
+        Path     = "/",
+        SameSite = SameSiteMode.Lax,
+    });
+    return Results.Redirect("/homepage");
+});
+
+// ── /auth/logout: legacy — redirect to login ──
 app.MapGet("/auth/logout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync("Cookies");
