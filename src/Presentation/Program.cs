@@ -1,5 +1,6 @@
 using Presentation;
 using Application.Auth.Commands;
+using Presentation.Components.Shared;
 using Application.Appointments.Commands;
 using Application.Common.Interfaces;
 using Infrastructure.AI.SemanticKernel;
@@ -40,8 +41,11 @@ builder.Services.AddScoped<IDoctorQueryService,      DoctorQueryService>();
 
 // ── Application Command Handlers ──
 builder.Services.AddScoped<BookAppointmentCommandHandler>();
+builder.Services.AddScoped<CheckPhoneCommandHandler>();
 builder.Services.AddScoped<RequestOtpCommandHandler>();
 builder.Services.AddScoped<VerifyOtpCommandHandler>();
+builder.Services.AddScoped<LoginWithPasswordCommandHandler>();
+builder.Services.AddScoped<SetPasswordCommandHandler>();
 
 // ── External Services ──
 builder.Services.AddScoped<TwilioSmsService>();

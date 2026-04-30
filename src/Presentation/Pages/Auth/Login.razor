@@ -1,4 +1,3 @@
-
 @page "/auth/login"
 @layout EmptyLayout
 @inject AuthService AuthService
@@ -8,10 +7,12 @@
 
 <link rel="stylesheet" href="css/login.css" />
 
+<ToastNotification @ref="_toast" />
+
 <div class="login-root">
     <div class="left">
         <div class="left-header">
-            <a class="back-btn" href="#" @onclick="BackToPhone">
+            <a class="back-btn" href="#" @onclick:preventDefault @onclick="GoBack">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 Quay lại
             </a>
@@ -20,6 +21,7 @@
                 Gọi hỗ trợ
             </a>
         </div>
+
         <div class="form-area">
             <div class="logo">
                 <div class="logo-mark">
@@ -31,27 +33,36 @@
                 </div>
             </div>
 
-            @if (_step == Step.EnterPhone)
+            @switch (_step)
             {
-                <EnterPhoneForm OnSubmit="RequestOtp" IsLoading="_loading" />
-            }
-            else
-            {
-                <VerifyOtpForm @ref="_verifyForm"
-                                             PhoneNumber="@_phone"
-                                             OnSubmit="VerifyOtp"
-                                             OnResend="ResendOtp"
-                                             IsLoading="_loading"
-                                             ResendUsed="_resendUsed"
-                                             IsLocked="_locked"
-                                             LockedUntil="_lockedUntil" />
+                case Step.EnterPhone:
+                    <EnterPhoneForm OnSubmit="CheckPhone" IsLoading="_loading" />
+                    break;
 
-                <div class="text-center mt-2">
-                    <button class="btn btn-link btn-sm text-muted p-0" @onclick="BackToPhone">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                        Đổi số điện thoại
-                    </button>
-                </div>
+                case Step.EnterPassword:
+                    <PasswordForm @ref="_passwordForm"
+                                  PhoneNumber="@_phone"
+                                  OnSubmit="LoginWithPassword"
+                                  OnForgotPassword="SwitchToOtp"
+                                  IsLoading="_loading"
+                                  IsLocked="_locked"
+                                  LockedUntil="_lockedUntil" />
+                    break;
+
+                case Step.VerifyOtp:
+                    <VerifyOtpForm @ref="_verifyForm"
+                                   PhoneNumber="@_phone"
+                                   OnSubmit="VerifyOtp"
+                                   OnResend="ResendOtp"
+                                   IsLoading="_loading"
+                                   ResendUsed="_resendUsed"
+                                   IsLocked="_locked"
+                                   LockedUntil="_lockedUntil" />
+                    break;
+
+                case Step.SetPassword:
+                    <SetPasswordForm OnSubmit="SetPassword" IsLoading="_loading" />
+                    break;
             }
 
             @if (!string.IsNullOrEmpty(_error))
@@ -62,11 +73,13 @@
                 </div>
             }
         </div>
+
         <div class="left-footer">
             <span>© 2026 MediCare</span>
             <a href="#">Chính sách bảo mật</a>
         </div>
     </div>
+
     <div class="right">
         <div class="right-bg"></div>
         <div class="right-content">
@@ -87,9 +100,43 @@
         <div class="right-badge"><span class="pulse"></span><span class="badge-txt">Online</span><span class="badge-num">24/7</span></div>
         <div class="deco-circle" style="width:80px;height:80px;top:40px;right:80px;"></div>
         <div class="deco-circle" style="width:40px;height:40px;bottom:60px;left:60px;"></div>
-        <div class="float-card" style="display:none"></div>
     </div>
 </div>
+
+<style>
+/* ── Inline password-specific styles ── */
+.pw-toggle {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--txt3, #A8A5A1); padding: 0;
+}
+.forgot-pw-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--blue-txt, #0C447C); font-size: 13px; text-decoration: underline;
+    font-family: inherit;
+}
+.inline-error {
+    display: flex; align-items: flex-start; gap: 6px;
+    background: #FEF2F2; border: 1px solid #FECACA;
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: #B91C1C; line-height: 1.5;
+    margin-bottom: 12px;
+}
+.lock-banner {
+    display: flex; align-items: center; gap: 6px;
+    background: #FFF7ED; border: 1px solid #FED7AA;
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: #C2410C;
+    margin-bottom: 12px;
+}
+.spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .6s linear infinite; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
 @code {
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
@@ -100,25 +147,107 @@
     private string _error = "";
     private int _resendUsed;
     private DateTime? _lockedUntil;
-    private VerifyOtpForm? _verifyForm;
 
-    private async Task RequestOtp(string phone)
+    private VerifyOtpForm? _verifyForm;
+    private PasswordForm?  _passwordForm;
+    private ToastNotification? _toast;
+
+    // ── AC1: Check phone exists ──────────────────────────────────────────────
+    private async Task CheckPhone(string phone)
     {
         _loading = true; _error = "";
         try
         {
-            await AuthService.RequestOtpAsync(phone);
-            _phone = phone; _step = Step.VerifyOtp; _resendUsed = 0; _locked = false;
+            _phone = phone;
+            var result = await AuthService.CheckPhoneAsync(phone);
+
+            if (result.Exists)
+            {
+                // Existing patient → password flow
+                _step = Step.EnterPassword;
+                _locked = false;
+            }
+            else
+            {
+                // New patient → OTP flow
+                await AuthService.RequestOtpAsync(phone);
+                _step = Step.VerifyOtp;
+                _resendUsed = 0;
+                _locked = false;
+            }
         }
         catch (Domain.Exceptions.OtpRateLimitExceededException ex)
         {
             _locked = true; _lockedUntil = ex.UnlockedAt; _error = ex.Message;
         }
-        catch (ArgumentException ex) { _error = ex.Message; }
-        catch (Exception ex)         { _error = ex.Message; }
+        catch (Exception ex) { _error = ex.Message; }
         finally { _loading = false; }
     }
 
+    // ── AC1: Login with password (existing patient) ──────────────────────────
+    private async Task LoginWithPassword(string password)
+    {
+        _loading = true; _error = "";
+        try
+        {
+            var result = await AuthService.LoginWithPasswordAsync(_phone, password);
+            _toast?.Show("Đăng nhập thành công", "success");
+            await Task.Delay(800); // let toast show briefly
+            Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl, forceLoad: true);
+        }
+        catch (Domain.Exceptions.AccountLockedException ex)
+        {
+            _locked = true; _lockedUntil = ex.UnlockedAt;
+            _passwordForm?.SetError(ex.Message);
+        }
+        catch (Domain.Exceptions.InvalidPasswordException ex)
+        {
+            _passwordForm?.SetError(ex.Message);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    // ── AC1: Switch to OTP when forgotten password ───────────────────────────
+    private async Task SwitchToOtp()
+    {
+        _loading = true; _error = "";
+        try
+        {
+            await AuthService.RequestOtpAsync(_phone);
+            _step = Step.VerifyOtp;
+            _resendUsed = 0;
+            _locked = false;
+        }
+        catch (Domain.Exceptions.OtpRateLimitExceededException ex)
+        {
+            _locked = true; _lockedUntil = ex.UnlockedAt; _error = ex.Message;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    // ── AC4: Verify OTP (new patient) ────────────────────────────────────────
+    private async Task VerifyOtp(string otp)
+    {
+        _loading = true; _error = "";
+        try
+        {
+            var result = await AuthService.VerifyOtpAndSignInAsync(_phone, otp);
+            // OTP valid → proceed to set password
+            _step = Step.SetPassword;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _verifyForm?.SetError(ex.Message);
+
+            // AC1: warn about OTP count (in VerifyOtpForm itself)
+        }
+        finally { _loading = false; }
+    }
+
+    // ── AC3: Resend OTP ──────────────────────────────────────────────────────
     private async Task ResendOtp()
     {
         _loading = true; _error = "";
@@ -131,28 +260,39 @@
         }
         catch (Domain.Exceptions.OtpRateLimitExceededException ex)
         {
-            _locked = true; _lockedUntil = ex.UnlockedAt; _resendUsed = ex.MaxAttempts; _error = ex.Message;
+            _locked = true; _lockedUntil = ex.UnlockedAt;
+            _resendUsed = ex.MaxAttempts; _error = ex.Message;
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _loading = false; }
     }
 
-    private async Task VerifyOtp(string otp)
+    // ── AC1: Set password for new patient ────────────────────────────────────
+    private async Task SetPassword(string password)
     {
         _loading = true; _error = "";
         try
         {
-            var result = await AuthService.VerifyOtpAsync(_phone, otp);
-            Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl);
+            var result = await AuthService.SetPasswordAsync(_phone, password);
+            _toast?.Show("Tạo tài khoản thành công", "success");
+            await Task.Delay(800);
+            Nav.NavigateTo(ReturnUrl ?? result.RedirectUrl, forceLoad: true);
         }
-        catch (Exception ex) { _error = ex.Message; _verifyForm?.SetError(ex.Message); }
+        catch (Exception ex) { _error = ex.Message; }
         finally { _loading = false; }
     }
 
-    private void BackToPhone()
+    private void GoBack()
     {
-        _step = Step.EnterPhone; _error = ""; _locked = false; _resendUsed = 0;
+        _step = _step switch
+        {
+            Step.EnterPassword => Step.EnterPhone,
+            Step.VerifyOtp     => Step.EnterPhone,
+            Step.SetPassword   => Step.VerifyOtp,
+            _                  => Step.EnterPhone
+        };
+        _error = ""; _locked = false;
     }
 
-    private enum Step { EnterPhone, VerifyOtp }
+    private enum Step { EnterPhone, EnterPassword, VerifyOtp, SetPassword }
 }
