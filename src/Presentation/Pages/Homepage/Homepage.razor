@@ -307,7 +307,6 @@
             if (user.Identity?.IsAuthenticated == true)
             {
                 _isLoggedIn = true;
-                // Get full name from claims (Name claim is phone; check for a FullName claim first)
                 _userName = user.FindFirst("FullName")?.Value
                          ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
                          ?? "Người dùng";
@@ -321,18 +320,11 @@
         if (!firstRender || _toastChecked) return;
         _toastChecked = true;
 
-        // Read ams-toast cookie set by /auth/do-login or /auth/do-logout
-        var msg = await JS.InvokeAsync<string?>("eval", """
-            (function(){
-                const m = document.cookie.match(/(?:^|;\s*)ams-toast=([^;]*)/);
-                if(!m) return null;
-                document.cookie = 'ams-toast=;Max-Age=0;Path=/';
-                return decodeURIComponent(m[1]);
-            })()
-        """);
-
-        if (!string.IsNullOrEmpty(msg))
-            _toast?.Show(msg, "info");
+        // Read ?t= directly from window.location.search (reliable in all render modes).
+        // amsConsumeToastParam() also calls history.replaceState to clean the URL.
+        var toast = await JS.InvokeAsync<string?>("amsConsumeToastParam");
+        if (!string.IsNullOrEmpty(toast))
+            await JS.InvokeVoidAsync("amsShowToast", toast, "info");
     }
 
     // ── User button / dropdown ──────────────────────────────────────────────
