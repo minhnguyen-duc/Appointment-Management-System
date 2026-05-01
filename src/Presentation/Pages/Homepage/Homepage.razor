@@ -108,10 +108,11 @@
     <span class="mob-nav-lnk">Phiếu khám</span>
 </nav>
 
-<!-- Click-outside overlay for dropdown -->
+<!-- Click-outside overlay — z-index 29: below topbar (30) so dropdown is reachable,
+     above page content (no z-index) so outside clicks close dropdown -->
 @if (_dropdownOpen)
 {
-    <div style="position:fixed;inset:0;z-index:199;" @onclick="CloseDropdown"></div>
+    <div style="position:fixed;inset:0;z-index:29;" @onclick="CloseDropdown"></div>
 }
 
 <ToastNotification @ref="_toast" />
