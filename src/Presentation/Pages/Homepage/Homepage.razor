@@ -77,12 +77,12 @@
 
                         <div class="dd-divider"></div>
 
-                        <a class="dd-item danger" href="/auth/do-logout">
+                        <button class="dd-item danger" type="button" @onclick="Logout">
                             <div class="dd-item-icon">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                             </div>
                             Đăng xuất
-                        </a>
+                        </button>
                     </div>
                 }
             </div>
@@ -335,12 +335,13 @@
     private void GoToPhieuKham()     { _dropdownOpen = false; Nav.NavigateTo("/benhnhan/phieu-kham"); }
     private void GoToNotifications() { _dropdownOpen = false; Nav.NavigateTo("/benhnhan/thong-bao"); }
 
-    private void Logout()
+    private async Task Logout()
     {
         _dropdownOpen = false;
-        // forceLoad exits Blazor SPA → /auth/do-logout clears cookie,
-        // sets ams-toast, redirects back to /homepage
-        Nav.NavigateTo("/auth/do-logout", forceLoad: true);
+        // Use window.location.href via JS — bypasses Blazor enhanced navigation
+        // which intercepts <a href> clicks and silently swallows non-Blazor routes.
+        // This is the only reliable way to navigate to a server endpoint from Blazor Server.
+        await JS.InvokeVoidAsync("amsNavigate", "/auth/do-logout");
     }
 
     private void GoToLogin() => Nav.NavigateTo("/auth/login");

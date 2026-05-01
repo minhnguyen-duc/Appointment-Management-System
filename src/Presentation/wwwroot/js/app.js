@@ -78,3 +78,10 @@ window.amsConsumeToastParam = function() {
     } catch(e) {}
     return null;
 };
+
+// Force browser navigation — bypasses Blazor enhanced navigation interception.
+// Use this for server-side endpoints (logout, do-login) where Blazor's router
+// would silently swallow the navigation instead of doing a real HTTP request.
+window.amsNavigate = function(url) {
+    window.location.href = url;
+};
