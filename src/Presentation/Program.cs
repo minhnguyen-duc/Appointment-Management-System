@@ -146,16 +146,24 @@ app.MapGet("/auth/do-login", async (
 // ── /auth/do-logout: sign out, show toast, stay on homepage ──
 app.MapGet("/auth/do-logout", async (HttpContext ctx) =>
 {
-    await ctx.SignOutAsync("Cookies");
+    // Sign out explicitly with scheme name — works on GET without antiforgery
+    await ctx.SignOutAsync("Cookies", new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+    {
+        RedirectUri = null
+    });
+    // Delete the auth cookie manually as a safety net
+    ctx.Response.Cookies.Delete(".AspNetCore.Cookies");
+    ctx.Response.Cookies.Delete(".AspNetCore.Cookies.C1");
+
     var toastMsg = Uri.EscapeDataString("Bạn đã đăng xuất thành công");
     return Results.Redirect($"/homepage?t={toastMsg}");
-});
+}).ExcludeFromDescription();
 
 // ── /auth/logout: legacy — redirect to login ──
 app.MapGet("/auth/logout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync("Cookies");
     return Results.Redirect("/auth/login");
-});
+}).ExcludeFromDescription();
 
 app.Run();
