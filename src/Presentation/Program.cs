@@ -136,19 +136,10 @@ app.MapGet("/auth/do-login", async (
         ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(8),
     });
 
-    // Pass toast via short-lived cookie — keeps URL clean (no ?toast= visible in browser)
-    if (!string.IsNullOrWhiteSpace(msg))
-    {
-        ctx.Response.Cookies.Append("ams-toast", msg, new CookieOptions
-        {
-            MaxAge   = TimeSpan.FromSeconds(30),
-            Path     = "/",
-            SameSite = SameSiteMode.Lax,
-        });
-    }
-
-    // /homepage is the correct route for Homepage/Homepage.razor
+    // Pass toast via ?t= query param; Homepage will replaceState to clean URL
     var dest = string.IsNullOrWhiteSpace(returnUrl) ? "/homepage" : returnUrl;
+    if (!string.IsNullOrWhiteSpace(msg))
+        dest += (dest.Contains('?') ? "&" : "?") + "t=" + Uri.EscapeDataString(msg);
     return Results.Redirect(dest);
 });
 
@@ -156,13 +147,8 @@ app.MapGet("/auth/do-login", async (
 app.MapGet("/auth/do-logout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync("Cookies");
-    ctx.Response.Cookies.Append("ams-toast", "Bạn đã đăng xuất thành công", new CookieOptions
-    {
-        MaxAge   = TimeSpan.FromSeconds(30),
-        Path     = "/",
-        SameSite = SameSiteMode.Lax,
-    });
-    return Results.Redirect("/homepage");
+    var toastMsg = Uri.EscapeDataString("Bạn đã đăng xuất thành công");
+    return Results.Redirect($"/homepage?t={toastMsg}");
 });
 
 // ── /auth/logout: legacy — redirect to login ──
