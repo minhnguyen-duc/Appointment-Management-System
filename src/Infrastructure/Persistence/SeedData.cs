@@ -11,11 +11,11 @@ public static class SeedData
 
         var doctors = new[]
         {
-            Doctor.Create("BS. Nguyễn Văn An", "Tim mạch", "LIC-001"),
-            Doctor.Create("BS. Trần Thị Bình", "Nhi khoa", "LIC-002"),
-            Doctor.Create("BS. Lê Minh Châu", "Da liễu", "LIC-003"),
-            Doctor.Create("BS. Phạm Thị Dung", "Thần kinh", "LIC-004"),
-            Doctor.Create("BS. Hoàng Văn Em", "Tai Mũi Họng", "LIC-005"),
+            Doctor.Create("BS. Nguyễn Văn An", "TS.BS", "Tim mạch", "LIC-001", 300_000m),
+            Doctor.Create("BS. Trần Thị Bình", "TS.BS", "Nhi khoa", "LIC-002", 300_000m),
+            Doctor.Create("BS. Lê Minh Châu", "TS.BS", "Da liễu", "LIC-003", 300_000m),
+            Doctor.Create("BS. Phạm Thị Dung", "TS.BS", "Thần kinh", "LIC-004", 300_000m),
+            Doctor.Create("BS. Hoàng Văn Em", "TS.BS", "Tai Mũi Họng", "LIC-005", 300_000m),
         };
         await db.Doctors.AddRangeAsync(doctors);
 

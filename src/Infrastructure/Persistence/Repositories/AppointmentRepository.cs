@@ -29,4 +29,30 @@ public class AppointmentRepository(AppDbContext db) : IAppointmentRepository
 
     public Task SaveChangesAsync(CancellationToken ct = default)
         => db.SaveChangesAsync(ct);
+
+    public Task<List<Domain.Entities.Appointment>> GetByDoctorAndRangeAsync(
+        Guid doctorId, DateTime from, DateTime to, CancellationToken ct = default)
+        => _db.Set<Domain.Entities.Appointment>()
+              .Include(a => a.Patient)
+              .Include(a => a.Doctor)
+              .Where(a => a.DoctorId == doctorId
+                       && a.ScheduledAt >= from
+                       && a.ScheduledAt <= to
+                       && a.Status != Domain.Enums.AppointmentStatus.Cancelled)
+              .ToListAsync(ct);
+
+    public Task<int> CountConfirmedByDoctorTodayAsync(
+        Guid doctorId, DateTime date, CancellationToken ct = default)
+        => _db.Set<Domain.Entities.Appointment>()
+              .CountAsync(a => a.DoctorId == doctorId
+                            && a.ScheduledAt.Date == date.Date
+                            && a.Status == Domain.Enums.AppointmentStatus.Confirmed, ct);
+
+    public Task<Domain.Entities.Appointment?> GetByIdAsync(
+        Guid id, CancellationToken ct = default)
+        => _db.Set<Domain.Entities.Appointment>()
+              .Include(a => a.Patient)
+              .Include(a => a.Doctor)
+              .FirstOrDefaultAsync(a => a.Id == id, ct);
+
 }

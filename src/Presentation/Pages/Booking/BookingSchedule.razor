@@ -1,0 +1,392 @@
+@page "/booking/schedule/{DoctorId:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Application.Booking.Queries
+@using Application.Booking.Commands
+@using Application.PatientProfiles.Queries
+@using Application.PatientProfiles.Commands
+@using Application.Common.DTOs
+@using System.Security.Claims
+@inject GetDoctorCatalogQueryHandler   DoctorHandler
+@inject GetDoctorAvailabilityQueryHandler AvailHandler
+@inject GetPatientProfilesQueryHandler  ProfileHandler
+@inject CreatePatientProfileCommandHandler CreateProfileHandler
+@inject CreateBookingCommandHandler     BookingHandler
+@inject NavigationManager               Nav
+@inject AuthenticationStateProvider    AuthState
+
+<PageTitle>Đặt lịch khám — MediCare</PageTitle>
+<link rel="stylesheet" href="css/homepage.css"/>
+
+<div class="page" style="max-width:900px;margin:0 auto">
+
+    @if (_doctor is not null)
+    {
+        <!-- Doctor info banner -->
+        <div class="upcoming-card" style="margin-bottom:24px">
+            <div class="upcoming-icon" style="width:52px;height:52px;font-size:20px;font-weight:700;color:var(--blue);background:var(--blue-mid)">
+                @_doctor.FullName.Split(' ').Last()[..1]
+            </div>
+            <div style="flex:1">
+                <div style="font-size:11px;color:var(--blue);font-weight:600">@_doctor.AcademicTitle · @_doctor.Specialization</div>
+                <div style="font-size:16px;font-weight:700">@_doctor.FullName</div>
+                <div style="font-size:13px;color:var(--green);font-weight:600;margin-top:2px">Phí khám: @_doctor.ConsultationFee.ToString("N0") VNĐ</div>
+            </div>
+            <button class="account-btn" style="font-size:12px" @onclick="@(() => Nav.NavigateTo("/booking/doctors"))">← Đổi bác sĩ</button>
+        </div>
+    }
+
+    <!-- Step indicator -->
+    <div style="display:flex;gap:0;margin-bottom:28px">
+        @foreach (var (label, i) in new[]{"Hồ sơ", "Ngày giờ", "Xác nhận", "Thanh toán"}.Select((l,i) => (l,i+1)))
+        {
+            <div style="flex:1;text-align:center">
+                <div style="width:28px;height:28px;border-radius:50%;@(i <= _step ? "background:var(--blue);color:#fff;" : "background:var(--bg);color:var(--t3);border:1.5px solid var(--border-m);")display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-bottom:4px">@i</div>
+                <div style="font-size:11px;@(i <= _step ? "color:var(--blue);font-weight:600" : "color:var(--t3)")">@label</div>
+            </div>
+            @if (i < 4) { <div style="flex:1;height:1px;background:var(--border-m);align-self:center;margin-bottom:22px"></div> }
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;color:#B91C1C;font-size:13px;margin-bottom:16px">
+            @_error
+        </div>
+    }
+
+    <!-- STEP 1: Profile selection (AC2) -->
+    @if (_step == 1)
+    {
+        <div class="card">
+            <div class="card-hdr"><span class="card-title">Chọn hồ sơ bệnh nhân</span></div>
+            <div class="card-body">
+                @if (_profiles.Count == 0)
+                {
+                    <p style="color:var(--t2);font-size:13px;margin-bottom:16px">Bạn chưa có hồ sơ nào. Vui lòng tạo hồ sơ mới.</p>
+                }
+                else
+                {
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+                        @foreach (var p in _profiles)
+                        {
+                            <div class="upcoming-card" style="cursor:pointer;@(_selectedProfile?.Id == p.Id ? "border-color:var(--blue);background:#D8EAFA;" : "")"
+                                 @onclick="@(() => _selectedProfile = p)">
+                                <div style="width:36px;height:36px;border-radius:50%;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue)">
+                                    @p.FullName[..1]
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-weight:600;font-size:13px">@p.FullName</div>
+                                    <div style="font-size:11px;color:var(--t2)">@p.Relation · @p.Gender · @p.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                                </div>
+                                @if (p.IsDefault) { <span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:10px">Mặc định</span> }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Create new profile form -->
+                <details style="margin-bottom:16px">
+                    <summary style="cursor:pointer;font-size:13px;color:var(--blue);font-weight:500">+ Thêm hồ sơ mới</summary>
+                    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div style="grid-column:1/-1">
+                            <label style="font-size:12px;color:var(--t2)">Họ tên *</label>
+                            <input class="topbar-search" style="width:100%;margin-top:4px" @bind="_newProfile.FullName" placeholder="Nguyễn Văn A"/>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--t2)">Ngày sinh *</label>
+                            <input type="date" style="width:100%;padding:8px;border-radius:8px;border:0.5px solid var(--border-m);font-family:inherit;margin-top:4px"
+                                   @bind="_newProfile.DateOfBirth"/>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--t2)">Giới tính *</label>
+                            <select style="width:100%;padding:8px;border-radius:8px;border:0.5px solid var(--border-m);font-family:inherit;margin-top:4px"
+                                    @bind="_newProfile.Gender">
+                                <option value="">-- Chọn --</option>
+                                <option>Nam</option><option>Nữ</option><option>Khác</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--t2)">Quan hệ *</label>
+                            <select style="width:100%;padding:8px;border-radius:8px;border:0.5px solid var(--border-m);font-family:inherit;margin-top:4px"
+                                    @bind="_newProfile.Relation">
+                                <option value="">-- Chọn --</option>
+                                <option>Bản thân</option><option>Bố</option><option>Mẹ</option>
+                                <option>Con</option><option>Vợ</option><option>Chồng</option><option>Khác</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--t2)">Số điện thoại</label>
+                            <input class="topbar-search" style="width:100%;margin-top:4px" @bind="_newProfile.PhoneNumber" placeholder="0901..."/>
+                        </div>
+                        <div style="grid-column:1/-1;text-align:right">
+                            <button class="user-btn" @onclick="CreateProfile" disabled="@_saving" style="display:inline-flex">
+                                @if (_saving) { <span>Đang lưu...</span> } else { <span>Lưu hồ sơ</span> }
+                            </button>
+                        </div>
+                    </div>
+                </details>
+
+                <button class="user-btn" style="width:100%;justify-content:center"
+                        disabled="@(_selectedProfile is null)"
+                        @onclick="@(() => _step = 2)">
+                    Tiếp theo: Chọn ngày giờ →
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- STEP 2: Date + Slot selection (AC3 + AC4) -->
+    @if (_step == 2)
+    {
+        <div class="card">
+            <div class="card-hdr">
+                <span class="card-title">Chọn ngày và khung giờ</span>
+                <button class="account-btn" style="font-size:11px;padding:4px 10px" @onclick="@(() => _step = 1)">← Quay lại</button>
+            </div>
+            <div class="card-body">
+                @if (_availability.Count == 0)
+                {
+                    <div style="text-align:center;padding:24px;color:var(--t2)">Đang tải lịch...</div>
+                }
+                else
+                {
+                    <!-- Month/date picker -->
+                    <div style="margin-bottom:16px;overflow-x:auto">
+                        <div style="display:flex;gap:8px;padding-bottom:4px">
+                            @foreach (var day in _availability.Take(14))
+                            {
+                                <div style="flex-shrink:0;width:52px;text-align:center;cursor:@(day.HasAvailable ? "pointer" : "default");padding:8px 4px;border-radius:8px;border:0.5px solid @(day.Date == _selectedDate ? "var(--blue)" : "var(--border-m)");background:@(day.Date == _selectedDate ? "var(--blue-bg)" : day.HasAvailable ? "var(--bg-card)" : "#f9f9f9");opacity:@(day.HasAvailable ? "1" : ".45")"
+                                     @onclick="@(() => { if(day.HasAvailable) { _selectedDate = day.Date; _selectedSlot = null; } })">
+                                    <div style="font-size:10px;color:var(--t3)">@day.Date.ToString("ddd")[..2]</div>
+                                    <div style="font-size:16px;font-weight:700;color:@(day.Date == _selectedDate ? "var(--blue)" : "var(--t1)")">@day.Date.Day</div>
+                                    <div style="font-size:9px;color:var(--t3)">@day.Date.ToString("MMM")</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Time slots (AC3: 1h slots, AC4: grey out full) -->
+                    @if (_selectedDate.HasValue)
+                    {
+                        var daySlots = _availability.FirstOrDefault(d => d.Date == _selectedDate.Value);
+                        @if (daySlots is not null)
+                        {
+                            <div style="margin-bottom:16px">
+                                <div style="font-size:12px;color:var(--t2);margin-bottom:10px">Khung giờ trống ngày @_selectedDate.Value.ToString("dd/MM/yyyy"):</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                                    @foreach (var slot in daySlots.Slots)
+                                    {
+                                        var isFull     = !slot.IsAvailable;
+                                        var isSelected = _selectedSlot?.Start == slot.Start;
+                                        <button style="padding:8px 16px;border-radius:8px;border:1.5px solid @(isSelected ? "var(--blue)" : isFull ? "var(--border)" : "var(--border-m)");background:@(isSelected ? "var(--blue-bg)" : isFull ? "#f5f5f5" : "var(--bg-card)");color:@(isSelected ? "var(--blue)" : isFull ? "var(--t3)" : "var(--t1)");font-size:13px;font-weight:@(isSelected ? "700" : "400");cursor:@(isFull ? "not-allowed" : "pointer");font-family:inherit"
+                                                disabled="@isFull"
+                                                @onclick="@(() => _selectedSlot = slot)">
+                                            @slot.Label
+                                            @if (isFull) { <span style="font-size:10px"> (Đầy)</span> }
+                                            else { <span style="font-size:10px;color:var(--t3)"> (@(10 - slot.BookedCount) chỗ)</span> }
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <button class="user-btn" style="width:100%;justify-content:center"
+                            disabled="@(_selectedSlot is null)"
+                            @onclick="@(() => _step = 3)">
+                        Tiếp theo: Xác nhận →
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- STEP 3: Confirmation -->
+    @if (_step == 3)
+    {
+        <div class="card">
+            <div class="card-hdr">
+                <span class="card-title">Xác nhận thông tin đặt lịch</span>
+                <button class="account-btn" style="font-size:11px;padding:4px 10px" @onclick="@(() => _step = 2)">← Quay lại</button>
+            </div>
+            <div class="card-body">
+                <table style="width:100%;font-size:14px;border-collapse:collapse">
+                    <tr><td style="padding:8px 0;color:var(--t2)">Bác sĩ</td><td style="padding:8px 0;font-weight:600">@_doctor?.FullName</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Chuyên khoa</td><td>@_doctor?.Specialization</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Bệnh nhân</td><td style="font-weight:600">@_selectedProfile?.FullName</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Quan hệ</td><td>@_selectedProfile?.Relation</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Ngày khám</td><td style="font-weight:600">@_selectedSlot?.Start.ToString("dd/MM/yyyy")</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Giờ khám</td><td style="font-weight:600">@_selectedSlot?.Start.ToString("HH:mm") – @_selectedSlot?.End.ToString("HH:mm")</td></tr>
+                    <tr><td style="padding:8px 0;color:var(--t2)">Phí khám</td><td style="font-weight:700;color:var(--green);font-size:16px">@_doctor?.ConsultationFee.ToString("N0") VNĐ</td></tr>
+                </table>
+
+                <div style="margin-top:16px;padding:12px;background:var(--blue-bg);border:0.5px solid var(--blue-mid);border-radius:8px;font-size:12px;color:var(--blue-text)">
+                    💡 Sau khi xác nhận, bạn sẽ được chuyển đến trang thanh toán VNPAY.
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                    <!-- AC7: Add another specialty -->
+                    <button class="account-btn" style="flex:1;justify-content:center" @onclick="@(() => Nav.NavigateTo($"/booking/doctors?add={_currentAppointmentId}"))">
+                        + Đăng ký thêm chuyên khoa
+                    </button>
+                    <button class="user-btn" style="flex:2;justify-content:center" disabled="@_saving" @onclick="ProceedToPayment">
+                        @if (_saving) { <span>Đang xử lý...</span> }
+                        else { <span>Thanh toán VNPAY →</span> }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- STEP 4: Success / E-Ticket (AC6) -->
+    @if (_step == 4 && _eTicket is not null)
+    {
+        <div class="card" style="text-align:center">
+            <div class="card-body" style="padding:32px">
+                <div style="width:64px;height:64px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;color:var(--green)">Đặt lịch thành công!</h2>
+                <p style="color:var(--t2);font-size:13px;margin-bottom:24px">Phiếu khám đã được gửi qua Email và SMS.</p>
+
+                <!-- E-Ticket -->
+                <div style="border:2px dashed var(--blue-mid);border-radius:12px;padding:20px;max-width:360px;margin:0 auto">
+                    <div style="font-size:11px;color:var(--t2);margin-bottom:4px">SỐ THỨ TỰ</div>
+                    <div style="font-size:48px;font-weight:800;color:var(--blue);font-family:var(--mono);line-height:1;margin-bottom:12px">@_eTicket.SequenceNumber.ToString("D3")</div>
+                    <div style="font-size:13px;font-weight:600;margin-bottom:4px">@_eTicket.DoctorName</div>
+                    <div style="font-size:12px;color:var(--t2);margin-bottom:2px">@_eTicket.Specialization</div>
+                    <div style="font-size:12px;color:var(--t2);margin-bottom:12px">@_eTicket.ScheduledAt.ToString("HH:mm - dd/MM/yyyy")</div>
+                    <div style="background:var(--blue-bg);border-radius:8px;padding:10px;margin-bottom:12px">
+                        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">PHÒNG KHÁM</div>
+                        <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">@_eTicket.RoomNumber</div>
+                    </div>
+                    <!-- Barcode placeholder -->
+                    <div style="background:var(--bg);border-radius:8px;padding:12px">
+                        <div style="font-size:10px;color:var(--t3);margin-bottom:6px">MÃ PHIẾU</div>
+                        <div style="font-size:20px;font-weight:700;letter-spacing:4px;color:var(--t1);font-family:var(--mono)">@_eTicket.BarcodeData</div>
+                        <!-- Visual barcode bars (CSS only) -->
+                        <div style="display:flex;gap:2px;justify-content:center;margin-top:8px;height:32px">
+                            @foreach (var c in _eTicket.BarcodeData)
+                            {
+                                <div style="width:@((c % 3 + 1) * 2)px;height:100%;background:var(--t1);border-radius:1px"></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <button class="user-btn" style="margin-top:20px" @onclick="@(() => Nav.NavigateTo("/homepage"))">
+                    Về trang chủ
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid DoctorId { get; set; }
+
+    private DoctorCatalogDto?    _doctor          = null;
+    private List<PatientProfileDto> _profiles     = [];
+    private List<DoctorAvailabilityDto> _availability = [];
+    private PatientProfileDto?   _selectedProfile = null;
+    private DateOnly?            _selectedDate    = null;
+    private TimeSlotDto?         _selectedSlot    = null;
+    private ETicketDto?          _eTicket         = null;
+    private Guid?                _currentAppointmentId = null;
+    private int    _step  = 1;
+    private bool   _saving = false;
+    private string _error  = "";
+
+    // New profile form
+    private class ProfileForm
+    {
+        public string  FullName    { get; set; } = "";
+        public string  PhoneNumber { get; set; } = "";
+        public string  Gender      { get; set; } = "";
+        public string  Relation    { get; set; } = "";
+        public DateTime DateOfBirth { get; set; } = DateTime.Today.AddYears(-30);
+    }
+    private ProfileForm _newProfile = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load doctor
+        var all = await DoctorHandler.HandleAsync(new GetDoctorCatalogQuery());
+        _doctor = all.FirstOrDefault(d => d.Id == DoctorId);
+
+        // Load patient profiles
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var patientId = GetPatientId(authState.User);
+        if (patientId.HasValue)
+            _profiles = await ProfileHandler.HandleAsync(new GetPatientProfilesQuery(patientId.Value));
+        _selectedProfile = _profiles.FirstOrDefault(p => p.IsDefault) ?? _profiles.FirstOrDefault();
+
+        // AC3: load 2-month availability
+        _availability = await AvailHandler.HandleAsync(new GetDoctorAvailabilityQuery(DoctorId));
+        _selectedDate = _availability.FirstOrDefault(d => d.HasAvailable)?.Date;
+    }
+
+    private async Task CreateProfile()
+    {
+        _saving = true; _error = "";
+        try
+        {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var patientId = GetPatientId(authState.User) ?? throw new Exception("Không tìm thấy tài khoản.");
+            var dto = await CreateProfileHandler.HandleAsync(new CreatePatientProfileCommand(
+                patientId, _newProfile.FullName, _newProfile.PhoneNumber,
+                DateOnly.FromDateTime(_newProfile.DateOfBirth),
+                _newProfile.Gender, _newProfile.Relation));
+            _profiles.Add(dto);
+            _selectedProfile = dto;
+            _newProfile = new();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task ProceedToPayment()
+    {
+        _saving = true; _error = "";
+        try
+        {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var patientId = GetPatientId(authState.User) ?? throw new Exception("Không tìm thấy tài khoản.");
+            var result = await BookingHandler.HandleAsync(new CreateBookingCommand(
+                PatientId:       patientId,
+                ProfileId:       _selectedProfile!.Id,
+                DoctorId:        DoctorId,
+                ScheduledAt:     _selectedSlot!.Start,
+                ConsultationFee: _doctor!.ConsultationFee));
+
+            _currentAppointmentId = result.AppointmentId;
+
+            // In sandbox: simulate payment success → go to step 4
+            // In production: redirect to VNPAY → they return to /booking/vnpay-return
+            // For demo: skip to e-ticket
+            _step    = 4;
+            _eTicket = new ETicketDto
+            {
+                AppointmentId   = result.AppointmentId,
+                BarcodeData     = result.AppointmentId.ToString("N").ToUpper()[..12],
+                SequenceNumber  = new Random().Next(1, 50),
+                RoomNumber      = "P.201",
+                DoctorName      = _doctor.FullName,
+                Specialization  = _doctor.Specialization,
+                PatientName     = _selectedProfile.FullName,
+                ScheduledAt     = _selectedSlot.Start,
+                ConsultationFee = _doctor.ConsultationFee,
+                PaymentReference = result.AppointmentId.ToString("N")[..16].ToUpper()
+            };
+        }
+        catch (Domain.Exceptions.SlotFullException ex) { _error = ex.Message; _step = 2; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private static Guid? GetPatientId(ClaimsPrincipal user)
+    {
+        var raw = user.FindFirst("PatientId")?.Value;
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
+}

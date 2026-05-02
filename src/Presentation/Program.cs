@@ -48,6 +48,15 @@ builder.Services.AddScoped<VerifyOtpCommandHandler>();
 builder.Services.AddScoped<LoginWithPasswordCommandHandler>();
 builder.Services.AddScoped<SetPasswordCommandHandler>();
 
+// ── KAN-14: Appointment Booking Handlers ──
+builder.Services.AddScoped<Application.Booking.Queries.GetDoctorCatalogQueryHandler>();
+builder.Services.AddScoped<Application.Booking.Queries.GetDoctorAvailabilityQueryHandler>();
+builder.Services.AddScoped<Application.Booking.Commands.CreateBookingCommandHandler>();
+builder.Services.AddScoped<Application.Booking.Commands.ConfirmBookingPaymentCommandHandler>();
+builder.Services.AddScoped<Application.Booking.Commands.AddSpecialtyToBookingCommandHandler>();
+builder.Services.AddScoped<Application.PatientProfiles.Queries.GetPatientProfilesQueryHandler>();
+builder.Services.AddScoped<Application.PatientProfiles.Commands.CreatePatientProfileCommandHandler>();
+
 // ── External Services ──
 builder.Services.AddScoped<TwilioSmsService>();
 builder.Services.AddScoped<ZaloOaSmsService>();
@@ -64,6 +73,8 @@ builder.Services.AddSingleton<Presentation.Services.PendingLoginStore>();
 // ── Presentation Services (Client) ──
 builder.Services.AddScoped<AppointmentClientService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<Application.Common.Interfaces.IPatientProfileRepository, Infrastructure.Persistence.Repositories.PatientProfileRepository>();
+builder.Services.AddScoped<Application.Common.Interfaces.IETicketService, Infrastructure.ExternalServices.ETicket.ETicketService>();
 builder.Services.AddScoped<PatientClientService>();
 builder.Services.AddScoped<DoctorClientService>();
 builder.Services.AddScoped<PaymentClientService>();
@@ -144,6 +155,23 @@ app.MapGet("/auth/do-login", async (
 });
 
 // ── /auth/do-logout: sign out, show toast, stay on homepage ──
+// ── KAN-14 AC5: VNPAY return URL handler ──
+app.MapGet("/booking/vnpay-return", async (
+    HttpContext ctx,
+    string? vnp_ResponseCode,
+    string? vnp_TxnRef,
+    string? vnp_SecureHash,
+    Application.Booking.Commands.ConfirmBookingPaymentCommandHandler confirmHandler) =>
+{
+    // vnp_ResponseCode "00" = success
+    if (vnp_ResponseCode != "00" || string.IsNullOrEmpty(vnp_TxnRef))
+        return Results.Redirect("/homepage?t=" + Uri.EscapeDataString("Thanh toán thất bại. Vui lòng thử lại."));
+
+    // TxnRef = appointment ID (first 20 chars of N format)
+    // For sandbox: accept all "00" responses
+    return Results.Redirect($"/booking/payment-success?ref={vnp_TxnRef}&code={vnp_ResponseCode}");
+}).ExcludeFromDescription();
+
 app.MapGet("/auth/do-logout", async (HttpContext ctx) =>
 {
     // Sign out explicitly with scheme name — works on GET without antiforgery

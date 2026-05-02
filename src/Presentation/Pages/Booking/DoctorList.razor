@@ -1,0 +1,113 @@
+@page "/booking/doctors"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Application.Booking.Queries
+@using Application.Common.DTOs
+@inject GetDoctorCatalogQueryHandler DoctorCatalogHandler
+@inject NavigationManager Nav
+
+<PageTitle>Chọn bác sĩ — MediCare</PageTitle>
+<link rel="stylesheet" href="css/homepage.css"/>
+
+<div class="page" style="max-width:960px;margin:0 auto">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <button class="account-btn" style="padding:6px 12px;font-size:12px" @onclick="@(() => Nav.NavigateTo("/homepage"))">
+            ← Trang chủ
+        </button>
+        <h1 style="font-size:20px;font-weight:700">Chọn bác sĩ</h1>
+    </div>
+
+    <!-- Filters (AC1) -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+        <input class="topbar-search" style="width:240px;border-radius:8px;border:0.5px solid var(--border-m);padding:8px 14px"
+               placeholder="Tìm theo tên, chuyên khoa..."
+               @bind="_keyword" @bind:event="oninput" @oninput="FilterDoctors"/>
+        <select style="padding:8px 14px;border-radius:8px;border:0.5px solid var(--border-m);font-family:var(--font);font-size:13px"
+                @bind="_specialty" @bind:after="FilterDoctors">
+            <option value="">Tất cả chuyên khoa</option>
+            @foreach (var s in _specialties)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+    </div>
+
+    @if (_loading)
+    {
+        <div style="text-align:center;padding:40px;color:var(--t2)">Đang tải danh sách bác sĩ...</div>
+    }
+    else if (_doctors.Count == 0)
+    {
+        <div style="text-align:center;padding:40px;color:var(--t2)">Không tìm thấy bác sĩ phù hợp.</div>
+    }
+    else
+    {
+        <!-- Doctor grid (AC1) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+            @foreach (var doc in _filtered)
+            {
+                <div class="card" style="cursor:pointer;transition:transform .2s,box-shadow .2s"
+                     @onclick="@(() => SelectDoctor(doc))"
+                     @onmouseenter="@(e => {})" @onmouseleave="@(e => {})">
+                    <!-- Avatar -->
+                    <div style="background:linear-gradient(135deg,var(--blue-mid),var(--blue-bg));height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:var(--blue);border-radius:14px 14px 0 0">
+                        @doc.FullName.Split(' ').Last()[..1]
+                    </div>
+                    <div style="padding:14px 16px">
+                        <!-- AC1 fields -->
+                        <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:2px">@doc.AcademicTitle</div>
+                        <div style="font-size:15px;font-weight:700;margin-bottom:3px">@doc.FullName</div>
+                        <div style="font-size:12px;color:var(--t2);margin-bottom:8px">@doc.Specialization</div>
+                        @if (!string.IsNullOrEmpty(doc.Bio))
+                        {
+                            <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.5">
+                                @(doc.Bio.Length > 80 ? doc.Bio[..80] + "..." : doc.Bio)
+                            </div>
+                        }
+                        <div style="display:flex;align-items:center;justify-content:space-between">
+                            <div style="font-size:13px;font-weight:700;color:var(--green)">
+                                @doc.ConsultationFee.ToString("N0") VNĐ
+                            </div>
+                            <div style="font-size:11px;color:var(--t3)">
+                                ★ @doc.Rating.ToString("F1")
+                            </div>
+                        </div>
+                        <button class="user-btn" style="width:100%;margin-top:10px;justify-content:center;border-radius:8px">
+                            Đặt lịch
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<DoctorCatalogDto> _doctors  = [];
+    private List<DoctorCatalogDto> _filtered = [];
+    private List<string>           _specialties = [];
+    private string  _keyword   = "";
+    private string  _specialty = "";
+    private bool    _loading   = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _doctors     = await DoctorCatalogHandler.HandleAsync(new GetDoctorCatalogQuery());
+        _specialties = _doctors.Select(d => d.Specialization).Distinct().Order().ToList();
+        _filtered    = _doctors;
+        _loading     = false;
+    }
+
+    private void FilterDoctors()
+    {
+        _filtered = _doctors
+            .Where(d =>
+                (string.IsNullOrEmpty(_keyword)   || d.FullName.Contains(_keyword, StringComparison.OrdinalIgnoreCase) || d.Specialization.Contains(_keyword, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrEmpty(_specialty) || d.Specialization == _specialty))
+            .ToList();
+    }
+
+    private void SelectDoctor(DoctorCatalogDto doc)
+        => Nav.NavigateTo($"/booking/schedule/{doc.Id}");
+}
