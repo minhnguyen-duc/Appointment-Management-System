@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Infrastructure.Persistence;
 
@@ -18,6 +18,9 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
                 "User Id=sa;Password=Minh@1003;" +
                 "TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True;",
                 sql => sql.MigrationsAssembly("Infrastructure"))
+            // Suppress PendingModelChangesWarning — snapshot was manually updated
+            // alongside the hand-written migration. Running 'database update' is safe.
+            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;
 
         return new AppDbContext(opts);

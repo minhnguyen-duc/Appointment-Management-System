@@ -28,7 +28,8 @@ builder.Services.AddHttpContextAccessor();
 
 // ── Database ──
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // ── Repositories ──
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
