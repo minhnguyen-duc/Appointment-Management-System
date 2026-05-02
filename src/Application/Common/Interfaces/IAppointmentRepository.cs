@@ -18,7 +18,4 @@ public interface IAppointmentRepository
     Task<int> CountConfirmedByDoctorTodayAsync(
         Guid doctorId, DateTime date, CancellationToken ct = default);
 
-    // KAN-14: get by id with related data
-    Task<Domain.Entities.Appointment?> GetByIdAsync(
-        Guid id, CancellationToken ct = default);
 }
