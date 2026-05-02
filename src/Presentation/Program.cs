@@ -103,12 +103,13 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAn
 
 var app = builder.Build();
 
-// ── Auto-migrate DB khi startup (Dev only) ──
-if (app.Environment.IsDevelopment())
+// ── Auto-migrate DB khi startup ──────────────────────────────────────────────
+// Runs in all environments — safe because EF only applies pending migrations.
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+    if (app.Environment.IsDevelopment())
         await Infrastructure.Persistence.SeedData.SeedAsync(db);
 }
 
