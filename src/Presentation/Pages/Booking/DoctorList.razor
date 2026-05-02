@@ -22,7 +22,7 @@
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
         <input class="topbar-search" style="width:240px;border-radius:8px;border:0.5px solid var(--border-m);padding:8px 14px"
                placeholder="Tìm theo tên, chuyên khoa..."
-               @bind="_keyword" @bind:event="oninput" @oninput="FilterDoctors"/>
+               @bind="_keyword" @bind:after="FilterDoctors"/>
         <select style="padding:8px 14px;border-radius:8px;border:0.5px solid var(--border-m);font-family:var(--font);font-size:13px"
                 @bind="_specialty" @bind:after="FilterDoctors">
             <option value="">Tất cả chuyên khoa</option>
