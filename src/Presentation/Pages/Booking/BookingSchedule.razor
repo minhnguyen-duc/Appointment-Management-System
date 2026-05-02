@@ -13,6 +13,7 @@
 @inject CreateBookingCommandHandler     BookingHandler
 @inject NavigationManager               Nav
 @inject AuthenticationStateProvider    AuthState
+@inject IJSRuntime                      JS
 
 <PageTitle>Đặt lịch khám — MediCare</PageTitle>
 <link rel="stylesheet" href="css/homepage.css"/>
@@ -326,10 +327,7 @@
         _doctor = all.FirstOrDefault(d => d.Id == DoctorId);
 
         // Load patient profiles
-        var authState = await AuthState.GetAuthenticationStateAsync();
-        var patientId = GetPatientId(authState.User);
-        if (patientId.HasValue)
-            _profiles = await ProfileHandler.HandleAsync(new GetPatientProfilesQuery(patientId.Value));
+        _profiles = await ProfileHandler.HandleAsync(new GetPatientProfilesQuery(patientId.Value));
         _selectedProfile = _profiles.FirstOrDefault(p => p.IsDefault) ?? _profiles.FirstOrDefault();
 
         // AC3: load 2-month availability
