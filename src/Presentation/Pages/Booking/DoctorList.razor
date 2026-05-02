@@ -84,6 +84,12 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "specialty")]
+    public string? SpecialtyParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "keyword")]
+    public string? KeywordParam { get; set; }
+
     private List<DoctorCatalogDto> _doctors  = [];
     private List<DoctorCatalogDto> _filtered = [];
     private List<string>           _specialties = [];
@@ -93,9 +99,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Pre-populate filters from URL query params (from SpecialtyChip, DoctorRow, search bar)
+        _keyword   = KeywordParam  ?? "";
+        _specialty = SpecialtyParam ?? "";
+
         _doctors     = await DoctorCatalogHandler.HandleAsync(new GetDoctorCatalogQuery());
         _specialties = _doctors.Select(d => d.Specialization).Distinct().Order().ToList();
-        _filtered    = _doctors;
+        FilterDoctors();
         _loading     = false;
     }
 

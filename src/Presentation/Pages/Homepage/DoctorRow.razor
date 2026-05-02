@@ -1,10 +1,9 @@
+@inject NavigationManager Nav
+
 <div class="doc-row" role="button" tabindex="0" @onclick="HandleClick">
     <div class="doc-av-wrap">
         <div class="doc-av" style="@($"background:{Avatar}")">@Initials</div>
-        @if (IsOnline)
-        {
-            <div class="doc-online"></div>
-        }
+        @if (IsOnline) { <div class="doc-online"></div> }
     </div>
     <div class="doc-info">
         <div class="doc-name">@Name</div>
@@ -15,34 +14,19 @@
 </div>
 
 @code {
-    [Parameter]
-    public string? Name { get; set; }
+    [Parameter] public string? Name       { get; set; }
+    [Parameter] public string? Specialty  { get; set; }
+    [Parameter] public string? Rating     { get; set; }
+    [Parameter] public string? ReviewCount { get; set; }
+    [Parameter] public string? Initials   { get; set; }
+    [Parameter] public string? Avatar     { get; set; }
+    [Parameter] public bool    IsOnline   { get; set; }
 
-    [Parameter]
-    public string? Specialty { get; set; }
-
-    [Parameter]
-    public string? Rating { get; set; }
-
-    [Parameter]
-    public string? ReviewCount { get; set; }
-
-    [Parameter]
-    public string? Initials { get; set; }
-
-    [Parameter]
-    public string? Avatar { get; set; }
-
-    [Parameter]
-    public bool IsOnline { get; set; }
-
+    // Navigate to doctor list filtered by this specialty
     private void HandleClick()
-    {
-        // Navigate to doctor profile
-    }
+        => Nav.NavigateTo($"/booking/doctors?specialty={Uri.EscapeDataString(Specialty ?? "")}");
 
+    // "Đặt lịch" button — same destination
     private void HandleBooking()
-    {
-        // Handle booking action
-    }
+        => Nav.NavigateTo($"/booking/doctors?specialty={Uri.EscapeDataString(Specialty ?? "")}");
 }

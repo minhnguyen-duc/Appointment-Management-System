@@ -1,4 +1,8 @@
-<div class="spec-chip" tabindex="0" @onclick="HandleClick">
+@inject NavigationManager Nav
+
+<div class="spec-chip" tabindex="0" role="button"
+     @onclick="HandleClick"
+     @onkeydown="@(e => { if(e.Key=="Enter"||e.Key==" ") HandleClick(); })">
     <div class="spec-icon-wrap" style="@($"background:{BgColor}")">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="@TextColor" stroke-width="2" stroke-linecap="round">
             <path d="@Icon"/>
@@ -9,23 +13,18 @@
 </div>
 
 @code {
-    [Parameter]
-    public string? Name { get; set; }
-
-    [Parameter]
-    public string? Count { get; set; }
-
-    [Parameter]
-    public string? BgColor { get; set; }
-
-    [Parameter]
-    public string? TextColor { get; set; }
-
-    [Parameter]
-    public string? Icon { get; set; }
+    [Parameter] public string? Name      { get; set; }
+    [Parameter] public string? Count     { get; set; }
+    [Parameter] public string? BgColor   { get; set; }
+    [Parameter] public string? TextColor { get; set; }
+    [Parameter] public string? Icon      { get; set; }
 
     private void HandleClick()
     {
-        // Handle specialty selection
+        // "Tất cả" → no filter; otherwise filter by specialty name
+        if (Name == "Tất cả")
+            Nav.NavigateTo("/booking/doctors");
+        else
+            Nav.NavigateTo($"/booking/doctors?specialty={Uri.EscapeDataString(Name ?? "")}");
     }
 }

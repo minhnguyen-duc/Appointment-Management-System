@@ -21,7 +21,7 @@
 
     <nav class="topbar-nav">
         <span class="nav-lnk active">Trang chủ</span>
-        <span class="nav-lnk">Đặt lịch</span>
+        <span class="nav-lnk" @onclick='() => Nav.NavigateTo("/booking/doctors")' style="cursor:pointer">Đặt lịch</span>
         <span class="nav-lnk">Bác sĩ</span>
         <span class="nav-lnk">Tư vấn AI</span>
         <span class="nav-lnk">Lịch sử</span>
@@ -101,7 +101,7 @@
 <!-- Mobile nav drawer -->
 <nav class="mobile-nav @(mobileNavOpen ? "open" : "")" id="mobileNav">
     <span class="mob-nav-lnk active">Trang chủ</span>
-    <span class="mob-nav-lnk">Đặt lịch</span>
+    <span class="mob-nav-lnk" @onclick='() => { Nav.NavigateTo("/booking/doctors"); mobileNavOpen = false; }'>Đặt lịch</span>
     <span class="mob-nav-lnk">Bác sĩ</span>
     <span class="mob-nav-lnk">Tư vấn AI</span>
     <span class="mob-nav-lnk">Lịch sử khám</span>
@@ -125,8 +125,8 @@
             <h1 class="hero-title">Đặt lịch khám<br/><span>nhanh chóng</span>, dễ dàng</h1>
             <div class="search-bar" role="search">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="search" placeholder="Tìm bác sĩ, chuyên khoa, bệnh viện..." aria-label="Tìm kiếm"/>
-                <button class="search-btn">Tìm</button>
+                <input type="search" placeholder="Tìm bác sĩ, chuyên khoa, bệnh viện..." aria-label="Tìm kiếm" @bind="_searchKeyword" @onkeydown="OnSearchKeyDown"/>
+                <button class="search-btn" @onclick="GoToSearch">Tìm</button>
             </div>
         </div>
         <div class="hero-stats">
@@ -349,10 +349,25 @@
 
     // ── Nav helpers ─────────────────────────────────────────────────────────
     private void ToggleNav() => mobileNavOpen = !mobileNavOpen;
-    private void BookDoctor() => Nav.NavigateTo("/doctors");
-    private void BookByDate() => Nav.NavigateTo("/booking");
+    private void BookDoctor() => Nav.NavigateTo("/booking/doctors");
+    private void BookByDate() => Nav.NavigateTo("/booking/doctors");
 
     // ── Helpers ─────────────────────────────────────────────────────────────
+    private string _searchKeyword = "";
+
+    private void GoToSearch()
+    {
+        var url = string.IsNullOrWhiteSpace(_searchKeyword)
+            ? "/booking/doctors"
+            : $"/booking/doctors?keyword={Uri.EscapeDataString(_searchKeyword)}";
+        Nav.NavigateTo(url);
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") GoToSearch();
+    }
+
     private static string BuildInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "?";
