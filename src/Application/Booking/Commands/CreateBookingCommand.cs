@@ -21,7 +21,6 @@ public sealed record CreateBookingCommand(
 
 public class CreateBookingCommandHandler(
     IAppointmentRepository appointmentRepo,
-    IDoctorRepository      doctorRepo,
     IPaymentService        paymentService)
 {
     public async Task<BookingConfirmationDto> HandleAsync(
