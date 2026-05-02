@@ -54,7 +54,12 @@ public class AppointmentQueryService(AppDbContext db) : IAppointmentQueryService
         {
             var start = new DateTime(date.Year, date.Month, date.Day, h, 0, 0, DateTimeKind.Local);
             var count = booked.Count(b => b == h);
-            slots.Add(new TimeSlotDto(start, start.AddMinutes(30), count < 10));
+            slots.Add(new TimeSlotDto
+            {
+                Start       = start,
+                End         = start.AddHours(1),
+                BookedCount = count
+            });
         }
         return slots;
     }
@@ -115,7 +120,10 @@ public class AppointmentQueryService(AppDbContext db) : IAppointmentQueryService
     }
 
     private static AppointmentDto Map(Domain.Entities.Appointment a) => new(
-        a.Id, a.Patient.FullName, a.Doctor.FullName,
-        a.Doctor.Specialization, a.ScheduledAt, a.DurationMinutes,
+        a.Id,
+        a.Patient?.FullName ?? "",
+        a.Doctor?.FullName  ?? "",
+        a.Doctor?.Specialization ?? "",
+        a.ScheduledAt, a.DurationMinutes,
         a.Status, a.Notes);
 }

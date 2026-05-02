@@ -32,7 +32,7 @@ public class AppointmentRepository(AppDbContext db) : IAppointmentRepository
 
     public Task<List<Domain.Entities.Appointment>> GetByDoctorAndRangeAsync(
         Guid doctorId, DateTime from, DateTime to, CancellationToken ct = default)
-        => _db.Set<Domain.Entities.Appointment>()
+        => db.Appointments
               .Include(a => a.Patient)
               .Include(a => a.Doctor)
               .Where(a => a.DoctorId == doctorId
@@ -43,7 +43,7 @@ public class AppointmentRepository(AppDbContext db) : IAppointmentRepository
 
     public Task<int> CountConfirmedByDoctorTodayAsync(
         Guid doctorId, DateTime date, CancellationToken ct = default)
-        => _db.Set<Domain.Entities.Appointment>()
+        => db.Appointments
               .CountAsync(a => a.DoctorId == doctorId
                             && a.ScheduledAt.Date == date.Date
                             && a.Status == Domain.Enums.AppointmentStatus.Confirmed, ct);
