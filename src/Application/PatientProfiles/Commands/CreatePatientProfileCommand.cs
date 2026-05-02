@@ -15,15 +15,13 @@ public sealed record CreatePatientProfileCommand(
     string? NationalId = null);
 
 public class CreatePatientProfileCommandHandler(
-    IPatientProfileRepository profileRepo,
-    IPatientQueryService      patientQuery)
+    IPatientProfileRepository profileRepo)
 {
     public async Task<PatientProfileDto> HandleAsync(
         CreatePatientProfileCommand cmd, CancellationToken ct = default)
     {
-        // Verify patient exists
-        var patient = await patientQuery.GetByIdAsync(cmd.PatientId, ct)
-            ?? throw new InvalidOperationException("Bệnh nhân không tồn tại.");
+        // PatientId comes from authenticated claims — already verified by auth cookie.
+        // No need to re-query the DB for existence; just create the profile directly.
 
         // First profile is default
         var existing  = await profileRepo.GetByPatientIdAsync(cmd.PatientId, ct);

@@ -310,6 +310,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var patientId = GetPatientId(authState.User);
+
+        // If PatientId claim is missing/invalid (e.g. stale session from old DB),
+        // sign out and redirect to login so user gets a fresh session
+        if (!patientId.HasValue)
+        {
+            await JS.InvokeVoidAsync("amsNavigate", "/auth/do-logout");
+            return;
+        }
+
         // Load doctor
         var all = await DoctorHandler.HandleAsync(new GetDoctorCatalogQuery());
         _doctor = all.FirstOrDefault(d => d.Id == DoctorId);
@@ -332,7 +343,9 @@
         try
         {
             var authState = await AuthState.GetAuthenticationStateAsync();
-            var patientId = GetPatientId(authState.User) ?? throw new Exception("Không tìm thấy tài khoản.");
+            var patientId = GetPatientId(authState.User)
+                ?? throw new Exception("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+
             var dto = await CreateProfileHandler.HandleAsync(new CreatePatientProfileCommand(
                 patientId, _newProfile.FullName, _newProfile.PhoneNumber,
                 DateOnly.FromDateTime(_newProfile.DateOfBirth),
@@ -340,8 +353,12 @@
             _profiles.Add(dto);
             _selectedProfile = dto;
             _newProfile = new();
+            _error = "";
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
         finally { _saving = false; }
     }
 
