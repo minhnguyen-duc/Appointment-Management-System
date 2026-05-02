@@ -48,11 +48,5 @@ public class AppointmentRepository(AppDbContext db) : IAppointmentRepository
                             && a.ScheduledAt.Date == date.Date
                             && a.Status == Domain.Enums.AppointmentStatus.Confirmed, ct);
 
-    public Task<Domain.Entities.Appointment?> GetByIdAsync(
-        Guid id, CancellationToken ct = default)
-        => _db.Set<Domain.Entities.Appointment>()
-              .Include(a => a.Patient)
-              .Include(a => a.Doctor)
-              .FirstOrDefaultAsync(a => a.Id == id, ct);
 
 }

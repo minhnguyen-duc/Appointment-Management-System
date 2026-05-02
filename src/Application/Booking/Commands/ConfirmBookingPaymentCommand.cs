@@ -19,8 +19,7 @@ public class ConfirmBookingPaymentCommandHandler(
     IAppointmentRepository appointmentRepo,
     IPaymentService        paymentService,
     IETicketService        ticketService,
-    IEmailService          emailService,
-    ISmsService            smsService)
+    IEmailService          emailService)
 {
     public async Task<ETicketDto> HandleAsync(
         ConfirmBookingPaymentCommand cmd, CancellationToken ct = default)

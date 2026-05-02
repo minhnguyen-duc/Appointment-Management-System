@@ -1,3 +1,4 @@
+using Domain.Entities;
 using Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Application.Common.DTOs;
@@ -25,7 +26,7 @@ public class DoctorQueryService(AppDbContext db) : IDoctorQueryService
         string? keyword = null,
         CancellationToken ct = default)
     {
-        var q = _db.Set<Doctor>().Where(d => d.IsActive);
+        var q = db.Doctors.Where(d => d.IsActive);
         if (!string.IsNullOrWhiteSpace(specialization))
             q = q.Where(d => d.Specialization == specialization);
         if (!string.IsNullOrWhiteSpace(keyword))
