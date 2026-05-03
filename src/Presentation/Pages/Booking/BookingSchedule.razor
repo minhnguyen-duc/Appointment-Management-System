@@ -339,38 +339,6 @@
             }
         </div>
 
-        <!-- Sidebar: Doctor summary -->
-        <div class="schedule-sidebar">
-            <div class="doc-summary-card">
-                <div class="doc-summary-banner"></div>
-                <div class="doc-summary-body">
-                    @if (_doctor is not null)
-                    {
-                        <div class="doc-summary-header">
-                            <div class="doc-summary-av">@DoctorInitials(_doctor.FullName)</div>
-                            <div>
-                                <span class="doc-summary-badge">@_doctor.AcademicTitle</span>
-                                <div class="doc-summary-name">@_doctor.FullName</div>
-                                <div class="doc-summary-spec">@_doctor.Specialization</div>
-                            </div>
-                        </div>
-                        <div class="doc-summary-fee-row">
-                            <span class="doc-summary-fee-lbl">Phí khám</span>
-                            <span class="doc-summary-fee-val">@_doctor.ConsultationFee.ToString("N0")đ</span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div style="padding:12px 0;color:var(--t3);font-size:13px">Đang tải...</div>
-                    }
-                    <button class="doc-change-btn"
-                            @onclick='() => Nav.NavigateTo("/booking/doctors")'>
-                        ← Đổi bác sĩ
-                    </button>
-                </div>
-            </div>
-        </div>
-
 </div>
 
 @code {
