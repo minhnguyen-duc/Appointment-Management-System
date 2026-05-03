@@ -6,7 +6,7 @@
 
 /* ── Page shell ─────────────────────────────────────────── */
 .booking-page {
-    max-width: 1160px;
+    max-width: 1080px;
     margin: 0 auto;
     padding: 24px 20px 48px;
     font-family: var(--font, 'Be Vietnam Pro', sans-serif);
@@ -184,31 +184,17 @@
    BOOKING SCHEDULE — 4-step wizard
 ══════════════════════════════════════════════════════════ */
 
-.schedule-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
-    align-items: start;
-}
-@media (max-width: 900px) {
-    .schedule-layout { grid-template-columns: 1fr; }
-    .schedule-sidebar { order: -1; }
-}
+/* ══════════════════════════════════════════════════════════
+   BOOKING SCHEDULE — single column layout (no sidebar)
+══════════════════════════════════════════════════════════ */
 
-/* ── Doctor summary sidebar card ───────────────────────── */
-.doc-summary-card {
+/* Doctor summary — compact top banner (no sidebar) */
+.doc-summary-banner-top {
     background: var(--white); border: 1px solid var(--border);
-    border-radius: 14px; overflow: hidden;
+    border-radius: 14px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
-}
-.doc-summary-banner {
-    height: 8px;
-    background: linear-gradient(90deg, var(--blue-dark), var(--blue));
-}
-.doc-summary-body { padding: 16px; }
-.doc-summary-header {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 12px;
 }
 .doc-summary-av {
     width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
@@ -216,29 +202,26 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; font-weight: 800; color: var(--white);
 }
+.doc-summary-info { flex: 1; min-width: 0; }
 .doc-summary-badge {
     display: inline-block;
     background: var(--blue-bg); color: var(--blue);
     font-size: 10px; font-weight: 700;
     padding: 2px 9px; border-radius: 999px;
-    margin-bottom: 5px;
+    margin-bottom: 4px; letter-spacing: .04em;
 }
-.doc-summary-name { font-size: 15px; font-weight: 700; color: var(--blue-dark); margin-bottom: 2px; }
-.doc-summary-spec { font-size: 12px; color: var(--t2); margin-bottom: 10px; }
-.doc-summary-fee-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-top: 1px solid var(--border);
+.doc-summary-name { font-size: 15px; font-weight: 700; color: var(--blue-dark); }
+.doc-summary-spec { font-size: 12px; color: var(--t2); margin-top: 1px; }
+.doc-summary-fee-val {
+    font-size: 17px; font-weight: 700; color: var(--green);
+    white-space: nowrap; flex-shrink: 0;
 }
-.doc-summary-fee-lbl { font-size: 12px; color: var(--t2); }
-.doc-summary-fee-val { font-size: 16px; font-weight: 700; color: var(--green); }
 .doc-change-btn {
-    display: block; width: 100%; text-align: center;
-    padding: 9px; border-radius: 8px;
-    border: 1.5px solid var(--border-m);
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid var(--border-m);
     background: none; font-family: var(--font);
     font-size: 12px; color: var(--t2); cursor: pointer;
-    transition: border-color .15s, color .15s;
-    margin-top: 10px;
+    transition: border-color .15s, color .15s; flex-shrink: 0;
 }
 .doc-change-btn:hover { border-color: var(--blue); color: var(--blue); }
 

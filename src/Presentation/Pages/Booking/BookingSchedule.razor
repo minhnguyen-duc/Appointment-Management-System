@@ -29,10 +29,23 @@
         <span>@(_doctor?.FullName ?? "Chọn bác sĩ")</span>
     </div>
 
-    <div class="schedule-layout">
+    <!-- Doctor top banner (replaces sidebar) -->
+    @if (_doctor is not null)
+    {
+        <div class="doc-summary-banner-top">
+            <div class="doc-summary-av">@DoctorInitials(_doctor.FullName)</div>
+            <div class="doc-summary-info">
+                <span class="doc-summary-badge">@_doctor.AcademicTitle</span>
+                <div class="doc-summary-name">@_doctor.FullName</div>
+                <div class="doc-summary-spec">@_doctor.Specialization</div>
+            </div>
+            <div class="doc-summary-fee-val">@_doctor.ConsultationFee.ToString("N0")đ <span style="font-size:12px;font-weight:400;color:var(--t3)">/ lượt</span></div>
+            <button class="doc-change-btn" @onclick='() => Nav.NavigateTo("/booking/doctors")'>← Đổi bác sĩ</button>
+        </div>
+    }
 
-        <!-- Main content -->
-        <div>
+    <!-- Main content (single column) -->
+    <div>
             <!-- Step wizard -->
             <div class="step-wizard">
                 @foreach (var (label, i) in new[]{"Hồ sơ","Ngày giờ","Xác nhận","Thanh toán"}
