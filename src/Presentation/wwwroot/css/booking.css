@@ -8,7 +8,7 @@
 .booking-page {
     max-width: 1080px;
     margin: 0 auto;
-    padding: 24px 20px 48px;
+    padding: 20px 16px 32px;
     font-family: var(--font, 'Be Vietnam Pro', sans-serif);
 }
 
@@ -84,7 +84,7 @@
 .doctor-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    gap: 12px;
 }
 
 /* ── Doctor card — inline avatar layout (no floating/overlap) ─────── */
@@ -108,48 +108,48 @@
     background: linear-gradient(90deg, var(--blue), var(--blue-mid));
     flex-shrink: 0;
 }
-.doctor-card-body { padding: 14px 16px 16px; }
+.doctor-card-body { padding: 12px 14px 14px; }
 
 /* Header row: avatar + title + name */
-.doctor-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.doctor-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
 .doctor-card-av {
-    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
     background: linear-gradient(135deg, var(--blue), var(--blue-dark));
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 800; color: var(--white);
+    font-size: 16px; font-weight: 800; color: var(--white);
     box-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
-.doctor-card-info { flex: 1; min-width: 0; padding-top: 2px; }
+.doctor-card-info { flex: 1; min-width: 0; padding-top: 1px; }
 .doctor-card-title {
     display: inline-block;
     background: var(--blue-bg); color: var(--blue);
     font-size: 10px; font-weight: 700;
     padding: 2px 8px; border-radius: 999px;
-    margin-bottom: 4px; letter-spacing: .04em;
+    margin-bottom: 3px; letter-spacing: .04em;
 }
 .doctor-card-name {
-    font-size: 14px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     color: var(--blue-dark);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* Bio — 2-line clamp, natural height (no fixed height = no artificial gap) */
+/* Bio — 2-line clamp, natural height */
 .doctor-card-bio {
-    font-size: 12px; color: var(--t2); line-height: 1.55;
+    font-size: 12px; color: var(--t2); line-height: 1.5;
     display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 /* Footer: fee + button */
 .doctor-card-footer {
     display: flex; align-items: center; justify-content: space-between;
-    padding-top: 12px; border-top: 1px solid var(--border);
+    padding-top: 10px; border-top: 1px solid var(--border);
 }
 .doctor-card-fee { font-size: 14px; font-weight: 700; color: var(--green); }
 .doctor-card-fee span { font-size: 11px; font-weight: 400; color: var(--t3); }
 .doctor-card-btn {
     background: var(--blue); color: var(--white);
     font-size: 12px; font-weight: 600;
-    padding: 8px 16px; border-radius: 8px;
+    padding: 7px 14px; border-radius: 8px;
     border: none; cursor: pointer; font-family: var(--font);
     transition: opacity .15s; white-space: nowrap;
 }
@@ -467,19 +467,21 @@
 
 /* ── Mobile ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-    .booking-page { padding: 14px 12px 60px; }
+    .booking-page { padding: 12px 12px 24px; }
 
-    /* Doctor grid: single column, tighter */
-    .doctor-grid { grid-template-columns: 1fr; gap: 10px; }
+    /* Doctor grid: single column, tight gap */
+    .doctor-grid { grid-template-columns: 1fr; gap: 8px; }
 
     /* Compact card on mobile */
-    .doctor-card-body { padding: 12px 14px 14px; }
-    .doctor-card-av { width: 42px; height: 42px; font-size: 16px; }
-    .doctor-card-header { gap: 10px; margin-bottom: 8px; }
+    .doctor-card-body { padding: 10px 12px 12px; }
+    .doctor-card-av { width: 38px; height: 38px; font-size: 14px; }
+    .doctor-card-header { gap: 10px; margin-bottom: 6px; }
     .doctor-card-name { font-size: 13px; }
     .doctor-card-title { font-size: 9px; padding: 1px 7px; }
-    .doctor-card-bio { font-size: 11px; margin-bottom: 10px; }
+    .doctor-card-bio { font-size: 11px; margin-bottom: 8px; line-height: 1.45; }
+    .doctor-card-footer { padding-top: 8px; }
     .doctor-card-fee { font-size: 13px; }
+    .doctor-card-btn { padding: 7px 13px; font-size: 11px; }
 
     /* Search + filters */
     .bk-filter-bar { gap: 8px; }
