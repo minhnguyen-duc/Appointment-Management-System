@@ -1,0 +1,485 @@
+@page "/booking/schedule/{DoctorId:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Application.Booking.Queries
+@using Application.Booking.Commands
+@using Application.PatientProfiles.Queries
+@using Application.PatientProfiles.Commands
+@using Application.Common.DTOs
+@using System.Security.Claims
+@inject GetDoctorCatalogQueryHandler           DoctorHandler
+@inject GetDoctorAvailabilityQueryHandler      AvailHandler
+@inject GetPatientProfilesQueryHandler         ProfileHandler
+@inject CreatePatientProfileCommandHandler     CreateProfileHandler
+@inject CreateBookingCommandHandler            BookingHandler
+@inject NavigationManager                      Nav
+@inject AuthenticationStateProvider           AuthState
+@inject IJSRuntime                             JS
+
+<PageTitle>Đặt lịch khám · MediCare</PageTitle>
+<link rel="stylesheet" href="css/booking.css"/>
+
+<div class="booking-page">
+
+    <!-- Breadcrumb -->
+    <div class="bk-breadcrumb">
+        <a @onclick='() => Nav.NavigateTo("/homepage")'>Trang chủ</a>
+        <span class="sep">›</span>
+        <a @onclick='() => Nav.NavigateTo("/booking/doctors")'>Đặt lịch</a>
+        <span class="sep">›</span>
+        <span>@(_doctor?.FullName ?? "Chọn bác sĩ")</span>
+    </div>
+
+    <!-- Doctor top banner (replaces sidebar) -->
+    @if (_doctor is not null)
+    {
+        <div class="doc-summary-banner-top">
+            <div class="doc-summary-av">@DoctorInitials(_doctor.FullName)</div>
+            <div class="doc-summary-info">
+                <span class="doc-summary-badge">@_doctor.AcademicTitle</span>
+                <div class="doc-summary-name">@_doctor.FullName</div>
+                <div class="doc-summary-spec">@_doctor.Specialization</div>
+            </div>
+            <div class="doc-summary-fee-val">@_doctor.ConsultationFee.ToString("N0")đ <span style="font-size:12px;font-weight:400;color:var(--t3)">/ lượt</span></div>
+            <button class="doc-change-btn" @onclick='() => Nav.NavigateTo("/booking/doctors")'>← Đổi bác sĩ</button>
+        </div>
+    }
+
+    <!-- Main content (single column) -->
+    <div>
+            <!-- Step wizard -->
+            <div class="step-wizard">
+                @foreach (var (label, i) in new[]{"Hồ sơ","Ngày giờ","Xác nhận","Thanh toán"}
+                          .Select((l,i)=>(l,i+1)))
+                {
+                    <div class="step-item @(_step > i ? "done" : _step == i ? "active" : "")">
+                        <div class="step-circle">
+                            @if (_step > i)
+                            {
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m20 6-11 11-5-5"/></svg>
+                            }
+                            else { @i }
+                        </div>
+                        <div class="step-label">@label</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Error alert -->
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="bk-alert error">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    @_error
+                </div>
+            }
+
+            <!-- ── STEP 1: Profile ── -->
+            @if (_step == 1)
+            {
+                <div class="step-panel">
+                    <div class="step-panel-head">
+                        <span class="step-panel-title">Chọn hồ sơ bệnh nhân</span>
+                    </div>
+                    <div class="step-panel-body">
+                        @if (_profiles.Count > 0)
+                        {
+                            <div class="profile-list">
+                                @foreach (var p in _profiles)
+                                {
+                                    <div class="profile-item @(_selectedProfile?.Id == p.Id ? "selected" : "")"
+                                         @onclick="() => _selectedProfile = p" role="button">
+                                        <div class="profile-av">@p.FullName[..1]</div>
+                                        <div style="flex:1">
+                                            <div class="profile-name">@p.FullName</div>
+                                            <div class="profile-meta">@p.Relation · @p.Gender · @p.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                                        </div>
+                                        @if (p.IsDefault)
+                                        {
+                                            <span class="profile-default-badge">Mặc định</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Add profile toggle -->
+                        <button class="add-profile-toggle" @onclick="() => _showAddForm = !_showAddForm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                            Thêm hồ sơ mới
+                        </button>
+
+                        @if (_showAddForm)
+                        {
+                            <div class="add-profile-form">
+                                <div class="form-row full">
+                                    <div class="form-group">
+                                        <label class="form-label">Họ và tên *</label>
+                                        <input class="form-input" placeholder="Nguyễn Văn A"
+                                               @bind="_newProfile.FullName"/>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Ngày sinh *</label>
+                                        <input type="date" class="form-input"
+                                               @bind="_newProfile.DateOfBirth"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Giới tính *</label>
+                                        <select class="form-select" @bind="_newProfile.Gender">
+                                            <option value="">-- Chọn --</option>
+                                            <option>Nam</option><option>Nữ</option><option>Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Quan hệ *</label>
+                                        <select class="form-select" @bind="_newProfile.Relation">
+                                            <option value="">-- Chọn --</option>
+                                            <option>Bản thân</option><option>Bố</option><option>Mẹ</option>
+                                            <option>Con</option><option>Vợ</option><option>Chồng</option><option>Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <input class="form-input" placeholder="0901..."
+                                               @bind="_newProfile.PhoneNumber"/>
+                                    </div>
+                                </div>
+                                <button class="bk-btn-primary" @onclick="SaveProfile" disabled="@_saving">
+                                    @if (_saving) { <div class="bk-spinner" style="width:16px;height:16px;border-width:2px"></div> }
+                                    Lưu hồ sơ
+                                </button>
+                            </div>
+                        }
+
+                        <div style="margin-top:16px">
+                            <button class="bk-btn-primary" disabled="@(_selectedProfile is null)"
+                                    @onclick='() => { _step = 2; _error=""; }'>
+                                Tiếp theo: Chọn ngày giờ
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ── STEP 2: Date & Time ── -->
+            @if (_step == 2)
+            {
+                <div class="step-panel">
+                    <div class="step-panel-head">
+                        <span class="step-panel-title">Chọn ngày và khung giờ</span>
+                        <button class="step-back-btn" @onclick='() => { _step = 1; _error=""; }'>
+                            ← Quay lại
+                        </button>
+                    </div>
+                    <div class="step-panel-body">
+                        @if (_availability.Count == 0)
+                        {
+                            <div class="bk-loading">
+                                <div class="bk-spinner"></div>
+                                <div>Đang tải lịch khám...</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Date chips -->
+                            <div class="date-scroll">
+                                @foreach (var day in _availability.Take(21))
+                                {
+                                    var isActive   = day.Date == _selectedDate;
+                                    var isDisabled = !day.HasAvailable;
+                                    <div class="date-chip @(isActive ? "active" : "") @(isDisabled ? "disabled" : "")"
+                                         @onclick="() => { if(!isDisabled){ _selectedDate = day.Date; _selectedSlot = null; } }">
+                                        <div class="date-dow">@DateDow(day.Date)</div>
+                                        <div class="date-day">@day.Date.Day</div>
+                                        <div class="date-mon">@day.Date.ToString("MMM")</div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Time slots -->
+                            @if (_selectedDate.HasValue)
+                            {
+                                var daySlots = _availability.FirstOrDefault(d => d.Date == _selectedDate.Value);
+                                @if (daySlots is not null)
+                                {
+                                    <div class="slots-title">
+                                        Khung giờ ngày @_selectedDate.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="slots-grid">
+                                        @foreach (var slot in daySlots.Slots)
+                                        {
+                                            var isFull = !slot.IsAvailable;
+                                            var isSel  = _selectedSlot?.Start == slot.Start;
+                                            <button class="slot-btn @(isSel ? "selected" : "")"
+                                                    disabled="@isFull"
+                                                    @onclick="() => _selectedSlot = slot">
+                                                @slot.Label
+                                                @if (isFull)
+                                                { <span class="slot-remain">(Đầy)</span> }
+                                                else
+                                                { <span class="slot-remain">(@(10 - slot.BookedCount) chỗ)</span> }
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            }
+
+                            <button class="bk-btn-primary" disabled="@(_selectedSlot is null)"
+                                    @onclick='() => { _step = 3; _error=""; }'>
+                                Tiếp theo: Xác nhận
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ── STEP 3: Confirm ── -->
+            @if (_step == 3)
+            {
+                <div class="step-panel">
+                    <div class="step-panel-head">
+                        <span class="step-panel-title">Xác nhận thông tin</span>
+                        <button class="step-back-btn" @onclick='() => { _step = 2; _error=""; }'>
+                            ← Quay lại
+                        </button>
+                    </div>
+                    <div class="step-panel-body">
+                        <table class="confirm-table">
+                            <tr><td>Bác sĩ</td><td>@_doctor?.FullName</td></tr>
+                            <tr><td>Chuyên khoa</td><td>@_doctor?.Specialization</td></tr>
+                            <tr><td>Bệnh nhân</td><td>@_selectedProfile?.FullName</td></tr>
+                            <tr><td>Quan hệ</td><td>@_selectedProfile?.Relation</td></tr>
+                            <tr><td>Ngày khám</td><td>@_selectedSlot?.Start.ToString("dd/MM/yyyy")</td></tr>
+                            <tr><td>Giờ khám</td><td>@_selectedSlot?.Start.ToString("HH:mm") – @_selectedSlot?.End.ToString("HH:mm")</td></tr>
+                            <tr>
+                                <td>Phí khám</td>
+                                <td style="font-size:17px;font-weight:700;color:var(--green)">
+                                    @_doctor?.ConsultationFee.ToString("N0")đ
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="confirm-note">
+                            💳 Sau khi xác nhận, bạn sẽ được chuyển đến cổng thanh toán VNPAY an toàn.
+                        </div>
+                        <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+                            <button class="bk-btn-secondary"
+                                    @onclick='() => Nav.NavigateTo($"/booking/doctors")'>
+                                + Đăng ký thêm chuyên khoa
+                            </button>
+                            <button class="bk-btn-primary" disabled="@_saving" @onclick="ProceedToPayment">
+                                @if (_saving)
+                                { <div class="bk-spinner" style="width:16px;height:16px;border-width:2px"></div> }
+                                Thanh toán VNPAY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ── STEP 4: E-Ticket ── -->
+            @if (_step == 4 && _eTicket is not null)
+            {
+                <div style="text-align:center;margin-bottom:20px">
+                    <div style="width:56px;height:56px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    </div>
+                    <h2 style="font-size:20px;font-weight:800;color:var(--green);margin-bottom:4px">Đặt lịch thành công!</h2>
+                    <p style="color:var(--t2);font-size:13px">Phiếu khám đã được gửi qua Email và SMS.</p>
+                </div>
+
+                <div class="eticket-wrap">
+                    <div class="eticket-card">
+                        <div class="eticket-head">
+                            <div class="eticket-logo">MediCare</div>
+                            <div class="eticket-type">Phiếu khám bệnh điện tử</div>
+                        </div>
+                        <div class="eticket-stt-wrap">
+                            <div class="eticket-stt-lbl">Số thứ tự</div>
+                            <div class="eticket-stt-num">@_eTicket.SequenceNumber.ToString("D3")</div>
+                            <div class="eticket-room">Phòng @_eTicket.RoomNumber</div>
+                        </div>
+                        <div class="eticket-info">
+                            <div class="eticket-row">
+                                <span class="eticket-row-lbl">Bác sĩ</span>
+                                <span class="eticket-row-val">@_eTicket.DoctorName</span>
+                            </div>
+                            <div class="eticket-row">
+                                <span class="eticket-row-lbl">Bệnh nhân</span>
+                                <span class="eticket-row-val">@_eTicket.PatientName</span>
+                            </div>
+                            <div class="eticket-row">
+                                <span class="eticket-row-lbl">Ngày giờ</span>
+                                <span class="eticket-row-val">@_eTicket.ScheduledAt.ToString("HH:mm - dd/MM/yyyy")</span>
+                            </div>
+                            <div class="eticket-row">
+                                <span class="eticket-row-lbl">Phí khám</span>
+                                <span class="eticket-row-val" style="color:var(--green)">@_eTicket.ConsultationFee.ToString("N0")đ</span>
+                            </div>
+                        </div>
+                        <div class="eticket-barcode">
+                            <div class="eticket-code">@_eTicket.BarcodeData</div>
+                            <div class="eticket-bars">
+                                @foreach (var c in _eTicket.BarcodeData)
+                                {
+                                    <div style="width:@((c % 3 + 1) * 2)px;height:100%;background:var(--t1);border-radius:1px"></div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <button class="bk-btn-primary" style="margin-top:16px"
+                            @onclick='() => Nav.NavigateTo("/homepage")'>
+                        Về trang chủ
+                    </button>
+                </div>
+            }
+        </div>
+
+</div>
+
+@code {
+    [Parameter] public Guid DoctorId { get; set; }
+
+    private DoctorCatalogDto?           _doctor          = null;
+    private List<PatientProfileDto>     _profiles        = [];
+    private List<DoctorAvailabilityDto> _availability    = [];
+    private PatientProfileDto?          _selectedProfile = null;
+    private DateOnly?                   _selectedDate    = null;
+    private TimeSlotDto?                _selectedSlot    = null;
+    private ETicketDto?                 _eTicket         = null;
+    private int    _step         = 1;
+    private bool   _saving       = false;
+    private bool   _showAddForm  = false;
+    private string _error        = "";
+
+    private class ProfileForm
+    {
+        public string   FullName    { get; set; } = "";
+        public string   PhoneNumber { get; set; } = "";
+        public string   Gender      { get; set; } = "";
+        public string   Relation    { get; set; } = "";
+        public DateTime DateOfBirth { get; set; } = DateTime.Today.AddYears(-30);
+    }
+    private ProfileForm _newProfile = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var patientId = GetPatientId(authState.User);
+
+        if (!patientId.HasValue)
+        {
+            await JS.InvokeVoidAsync("amsNavigate", "/auth/do-logout");
+            return;
+        }
+
+        var all = await DoctorHandler.HandleAsync(new GetDoctorCatalogQuery());
+        _doctor = all.FirstOrDefault(d => d.Id == DoctorId);
+
+        _profiles = await ProfileHandler.HandleAsync(new GetPatientProfilesQuery(patientId.Value));
+        _selectedProfile = _profiles.FirstOrDefault(p => p.IsDefault) ?? _profiles.FirstOrDefault();
+        _showAddForm = _profiles.Count == 0;
+
+        _availability = await AvailHandler.HandleAsync(new GetDoctorAvailabilityQuery(DoctorId));
+        _selectedDate = _availability.FirstOrDefault(d => d.HasAvailable)?.Date;
+    }
+
+    private async Task SaveProfile()
+    {
+        _saving = true; _error = "";
+        try
+        {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var patientId = GetPatientId(authState.User)
+                ?? throw new Exception("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+
+            if (string.IsNullOrWhiteSpace(_newProfile.FullName))
+                throw new Exception("Vui lòng nhập họ tên.");
+            if (string.IsNullOrWhiteSpace(_newProfile.Gender))
+                throw new Exception("Vui lòng chọn giới tính.");
+            if (string.IsNullOrWhiteSpace(_newProfile.Relation))
+                throw new Exception("Vui lòng chọn quan hệ.");
+
+            var dto = await CreateProfileHandler.HandleAsync(new CreatePatientProfileCommand(
+                patientId,
+                _newProfile.FullName,
+                _newProfile.PhoneNumber,
+                DateOnly.FromDateTime(_newProfile.DateOfBirth),
+                _newProfile.Gender,
+                _newProfile.Relation));
+
+            _profiles.Add(dto);
+            _selectedProfile = dto;
+            _newProfile      = new();
+            _showAddForm     = false;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task ProceedToPayment()
+    {
+        _saving = true; _error = "";
+        try
+        {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var patientId = GetPatientId(authState.User)
+                ?? throw new Exception("Phiên đăng nhập hết hạn.");
+
+            var result = await BookingHandler.HandleAsync(new CreateBookingCommand(
+                PatientId:       patientId,
+                ProfileId:       _selectedProfile!.Id,
+                DoctorId:        DoctorId,
+                ScheduledAt:     _selectedSlot!.Start,
+                ConsultationFee: _doctor!.ConsultationFee));
+
+            _step    = 4;
+            _eTicket = new ETicketDto
+            {
+                AppointmentId    = result.AppointmentId,
+                BarcodeData      = result.AppointmentId.ToString("N").ToUpper()[..12],
+                SequenceNumber   = new Random().Next(1, 50),
+                RoomNumber       = "P.201",
+                DoctorName       = _doctor.FullName,
+                Specialization   = _doctor.Specialization,
+                PatientName      = _selectedProfile.FullName,
+                ScheduledAt      = _selectedSlot.Start,
+                ConsultationFee  = _doctor.ConsultationFee,
+                PaymentReference = result.AppointmentId.ToString("N")[..16].ToUpper()
+            };
+        }
+        catch (Domain.Exceptions.SlotFullException ex) { _error = ex.Message; _step = 2; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private static Guid? GetPatientId(ClaimsPrincipal user)
+    {
+        var raw = user.FindFirst("PatientId")?.Value;
+        return Guid.TryParse(raw, out var id) && id != Guid.Empty ? id : null;
+    }
+
+    private static string DoctorInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpper()
+            : name[..Math.Min(2, name.Length)].ToUpper();
+    }
+
+    private static string DateDow(DateOnly d) => d.DayOfWeek switch
+    {
+        DayOfWeek.Monday    => "T2",
+        DayOfWeek.Tuesday   => "T3",
+        DayOfWeek.Wednesday => "T4",
+        DayOfWeek.Thursday  => "T5",
+        DayOfWeek.Friday    => "T6",
+        DayOfWeek.Saturday  => "T7",
+        _                   => "CN"
+    };
+}

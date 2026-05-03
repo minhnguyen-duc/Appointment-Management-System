@@ -1,28 +1,79 @@
 @implements IDisposable
 
-@if (_seconds > 0)
+@if (IsLocked)
 {
-    <span class="text-muted small">Gửi lại sau <strong>@_seconds</strong>s</span>
+    <div style="font-size:12px;color:#991B1B;margin-bottom:12px;">
+        Đã gửi lại quá @ResendMax lần. Mở khoá sau <strong>@_lockRemaining</strong>
+    </div>
+}
+else if (_seconds > 0)
+{
+    <span style="color:var(--txt3);font-size:13px;">
+        Gửi lại sau <strong id="countdown">@_seconds</strong>s
+        @if (ResendUsed > 0)
+        {
+            <span style="font-size:12px;">(@ResendUsed/@ResendMax lần)</span>
+        }
+    </span>
 }
 else
 {
-    <button class="btn btn-link btn-sm p-0" @onclick="Resend">Gửi lại mã OTP</button>
+    <button style="color:var(--blue-txt);cursor:pointer;font-weight:500;font-size:13px;background:none;border:none;padding:0;text-decoration:none;"
+            class="resend-btn"
+            @onclick="Resend"
+            disabled="@(ResendUsed >= ResendMax)">
+        Gửi lại mã
+        @if (ResendUsed > 0)
+        {
+            <span style="font-size:12px;">(@ResendUsed/@ResendMax)</span>
+        }
+    </button>
 }
 
 @code {
     [Parameter] public EventCallback OnResend { get; set; }
+    [Parameter] public int ResendUsed { get; set; }
+    [Parameter] public int ResendMax { get; set; } = 3;
+    [Parameter] public bool IsLocked { get; set; }
+    [Parameter] public DateTime? LockedUntil { get; set; }
 
-    private int _seconds = 60;
+    private int _seconds = 30; // AC2: 30s SLA cho gateway
+    private string _lockRemaining = "";
     private Timer? _timer;
 
     protected override void OnInitialized() => StartCountdown();
 
-    private void StartCountdown()
+    protected override void OnParametersSet()
     {
-        _seconds = 60;
-        _timer = new Timer(_ => { if (--_seconds <= 0) _timer?.Dispose(); InvokeAsync(StateHasChanged); }, null, 1000, 1000);
+        if (IsLocked && LockedUntil.HasValue)
+            UpdateLockRemaining();
     }
 
-    private async Task Resend() { await OnResend.InvokeAsync(); StartCountdown(); }
+    private void StartCountdown()
+    {
+        _seconds = 30;
+        _timer?.Dispose();
+        _timer = new Timer(_ =>
+        {
+            if (_seconds > 0) _seconds--;
+            if (IsLocked && LockedUntil.HasValue) UpdateLockRemaining();
+            InvokeAsync(StateHasChanged);
+        }, null, 1000, 1000);
+    }
+
+    private void UpdateLockRemaining()
+    {
+        var remaining = LockedUntil!.Value - DateTime.UtcNow;
+        _lockRemaining = remaining > TimeSpan.Zero
+            ? $"{(int)remaining.TotalMinutes:D2}:{remaining.Seconds:D2}"
+            : "00:00";
+    }
+
+    private async Task Resend()
+    {
+        await OnResend.InvokeAsync();
+        StartCountdown();
+    }
+
     public void Dispose() => _timer?.Dispose();
 }

@@ -1,52 +1,150 @@
-<div class="auth-form">
-    <h5>Nhập mã xác thực</h5>
-    <p class="text-muted small">
-        Mã OTP đã được gửi đến <strong>@PhoneNumber</strong>
-    </p>
+@inject IJSRuntime JS
 
-    <div class="otp-inputs mb-3">
-        @for (int i = 0; i < 6; i++)
-        {
-            var idx = i;
-            <input type="text" maxlength="1" class="otp-box form-control"
-                   @ref="_inputs[idx]"
-                   @oninput="e => OnInput(e, idx)"
-                   @onkeydown="e => OnKeyDown(e, idx)"
-                   disabled="@IsLoading" />
-        }
-    </div>
+<div class="form-title">Nhập mã xác thực</div>
+<div class="form-sub">Mã OTP 6 chữ số đã được gửi đến</div>
 
-    <button class="btn btn-primary w-100 btn-lg"
-            @onclick="Submit"
-            disabled="@(IsLoading || _otp.Length < 6)">
-        @if (IsLoading)
-        { <span class="spinner-border spinner-border-sm me-2"></span> }
-        Xác nhận
-    </button>
-
-    <div class="text-center mt-3">
-        <CountdownResend OnResend="OnResend" />
+<div class="phone-display">
+    <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:2px;">Số điện thoại</div>
+        <div class="num">@PhoneNumber</div>
     </div>
 </div>
+
+<div class="otp-row" @class="{ 'opacity-50 pe-none': IsLocked }">
+    @for (int i = 0; i < 6; i++)
+    {
+        var idx = i;
+        <input class="otp-box @(_hasError ? "is-invalid" : "")"
+               type="text"
+               maxlength="1"
+               inputmode="numeric"
+               pattern="[0-9]*"
+               id="otp-box-@idx"
+               @ref="_inputs[idx]"
+               @oninput="e => OnInput(e, idx)"
+               @onkeydown="e => OnKeyDown(e, idx)"
+               @onpaste="e => OnPaste(e)"
+               disabled="@(IsLoading || IsLocked)" />
+    }
+</div>
+
+@if (IsLocked)
+{
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:20px;line-height:1.6;">
+        Tài khoản tạm thời bị khoá. Bạn đã gửi lại OTP quá @ResendMax lần. Vui lòng thử lại sau.
+    </div>
+}
+
+@if (_hasError)
+{
+    <div style="font-size:12px;color:#991B1B;margin-bottom:12px;">@_errorMsg</div>
+}
+
+<div class="resend-row">
+    <span>
+        <CountdownResend OnResend="OnResend"
+                         ResendUsed="@ResendUsed"
+                         ResendMax="@ResendMax"
+                         IsLocked="@IsLocked"
+                         LockedUntil="@LockedUntil" />
+    </span>
+</div>
+
+<button class="btn-primary"
+        @onclick="Submit"
+        disabled="@(IsLoading || _otp.Replace(" ","").Length < 6 || IsLocked)">
+    Xác nhận
+</button>
+<button class="btn-ghost"
+        @onclick="@(async () => await OnCancel.InvokeAsync())"
+        disabled="@IsLoading">
+    Quay lại
+</button>
 
 @code {
     [Parameter] public string PhoneNumber { get; set; } = "";
     [Parameter] public EventCallback<string> OnSubmit { get; set; }
     [Parameter] public EventCallback OnResend { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public int ResendUsed { get; set; }
+    [Parameter] public int ResendMax { get; set; } = 3;
+    [Parameter] public bool IsLocked { get; set; }
+    [Parameter] public DateTime? LockedUntil { get; set; }
 
     private readonly ElementReference[] _inputs = new ElementReference[6];
-    private string _otp = "";
+    private readonly char[] _digits = new char[6];
+    private string _otp => new string(_digits).Trim('\0');
+    private bool _hasError;
+    private string _errorMsg = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JS.InvokeVoidAsync("eval", "document.querySelector('.otp-box')?.focus()");
+    }
 
     private void OnInput(ChangeEventArgs e, int idx)
     {
-        var val = e.Value?.ToString() ?? "";
-        if (val.Length > 0)
-            _otp = _otp.PadRight(idx + 1).Remove(idx, 1).Insert(idx, val[^1].ToString());
+        _hasError = false;
+        var val = e.Value?.ToString()?.Trim() ?? "";
+        if (val.Length == 0) { _digits[idx] = '\0'; return; }
+
+        // Handle paste of full code into first box
+        if (val.Length == 6 && idx == 0)
+        {
+            for (int i = 0; i < 6; i++) _digits[i] = char.IsDigit(val[i]) ? val[i] : '\0';
+            StateHasChanged();
+            return;
+        }
+
+        var ch = val[^1];
+        if (!char.IsDigit(ch)) return;
+        _digits[idx] = ch;
+
+        // Auto-advance
+        if (idx < 5) _ = FocusAsync(idx + 1);
+
+        // Auto-submit when all 6 filled
+        if (_digits.All(c => c != '\0')) _ = Submit();
     }
 
     private async Task OnKeyDown(KeyboardEventArgs e, int idx)
-    { if (e.Key == "Enter" && _otp.Length == 6) await Submit(); }
+    {
+        if (e.Key == "Backspace" && _digits[idx] == '\0' && idx > 0)
+        {
+            _digits[idx - 1] = '\0';
+            await FocusAsync(idx - 1);
+        }
+        else if (e.Key == "Enter" && _otp.Length == 6)
+        {
+            await Submit();
+        }
+    }
 
-    private async Task Submit() => await OnSubmit.InvokeAsync(_otp);
+    private void OnPaste(ClipboardEventArgs e)
+    {
+        // JS interop handles paste; Blazor ClipboardEventArgs doesn't expose data
+        // Actual paste is handled via oninput when text arrives in the box
+    }
+
+    private async Task FocusAsync(int idx)
+    {
+        try { await JS.InvokeVoidAsync("eval", $"document.getElementById('otp-box-{idx}')?.focus()"); }
+        catch { /* ignore */ }
+    }
+
+    private async Task Submit()
+    {
+        var code = new string(_digits);
+        if (code.Length < 6 || code.Any(c => !char.IsDigit(c)))
+        {
+            _hasError = true; _errorMsg = "Vui lòng nhập đủ 6 chữ số.";
+            return;
+        }
+        await OnSubmit.InvokeAsync(code);
+    }
+
+    // Called from Login.razor after failed verify
+    public void SetError(string msg) { _hasError = true; _errorMsg = msg; StateHasChanged(); }
+    public void ClearError() { _hasError = false; Array.Clear(_digits, 0, 6); StateHasChanged(); }
 }

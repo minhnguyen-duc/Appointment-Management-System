@@ -1,0 +1,381 @@
+@page "/"
+@page "/homepage"
+@page "/homepage/homepage"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Trang chủ bệnh nhân — MediCare</PageTitle>
+
+<div class="topbar">
+    <button class="hamburger" id="menuBtn" @onclick="ToggleNav" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="logo-group">
+        <div class="logo-mark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2.5" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>
+        </div>
+        <span class="logo-text">MediCare</span>
+    </div>
+
+    <nav class="topbar-nav">
+        <span class="nav-lnk active">Trang chủ</span>
+        <span class="nav-lnk" @onclick='() => Nav.NavigateTo("/booking/doctors")' style="cursor:pointer">Đặt lịch</span>
+        <span class="nav-lnk">Bác sĩ</span>
+        <span class="nav-lnk">Tư vấn AI</span>
+        <span class="nav-lnk">Lịch sử</span>
+        <span class="nav-lnk">Phiếu khám</span>
+    </nav>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-actions">
+        @if (_isLoggedIn)
+        {
+            <!-- Logged-in: user button with dropdown -->
+            <div class="user-dropdown-wrap" @ref="_dropdownRef">
+                <button class="user-btn" @onclick="ToggleDropdown" type="button">
+                    <div class="user-btn-av">@_userInitials</div>
+                    @_userName
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="opacity:.7"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+
+                @if (_dropdownOpen)
+                {
+                    <div class="user-dropdown">
+                        <!-- Header -->
+                        <div class="dd-header">
+                            <div class="dd-av">@_userInitials</div>
+                            <div>
+                                <div class="dd-greet">Xin chào,</div>
+                                <div class="dd-name">@_userName</div>
+                            </div>
+                        </div>
+
+                        <!-- Menu items -->
+                        <button class="dd-item" type="button" @onclick="GoToProfile">
+                            <div class="dd-item-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4M9 16h6M9 12h6"/></svg>
+                            </div>
+                            Hồ sơ bệnh nhân
+                        </button>
+
+                        <button class="dd-item" type="button" @onclick="GoToPhieuKham">
+                            <div class="dd-item-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                            </div>
+                            Phiếu khám bệnh
+                        </button>
+
+                        <button class="dd-item" type="button" @onclick="GoToNotifications">
+                            <div class="dd-item-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            </div>
+                            Thông báo
+                        </button>
+
+                        <div class="dd-divider"></div>
+
+                        <button class="dd-item danger" type="button" @onclick="Logout">
+                            <div class="dd-item-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            </div>
+                            Đăng xuất
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Logged-out: Tài khoản button -->
+            <button class="account-btn" type="button" @onclick="GoToLogin">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Tài khoản
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Mobile nav drawer -->
+<nav class="mobile-nav @(mobileNavOpen ? "open" : "")" id="mobileNav">
+    <span class="mob-nav-lnk active">Trang chủ</span>
+    <span class="mob-nav-lnk" @onclick='() => { Nav.NavigateTo("/booking/doctors"); mobileNavOpen = false; }'>Đặt lịch</span>
+    <span class="mob-nav-lnk">Bác sĩ</span>
+    <span class="mob-nav-lnk">Tư vấn AI</span>
+    <span class="mob-nav-lnk">Lịch sử khám</span>
+    <span class="mob-nav-lnk">Phiếu khám</span>
+</nav>
+
+<!-- Click-outside overlay — z-index 29: below topbar (30) so dropdown is reachable,
+     above page content (no z-index) so outside clicks close dropdown -->
+@if (_dropdownOpen)
+{
+    <div style="position:fixed;inset:0;z-index:29;" @onclick="CloseDropdown"></div>
+}
+
+<ToastNotification @ref="_toast" />
+
+<main class="page">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-body">
+            <p class="hero-greeting">Xin chào, @(_isLoggedIn ? _userName : "bạn") 👋</p>
+            <h1 class="hero-title">Đặt lịch khám<br/><span>nhanh chóng</span>, dễ dàng</h1>
+            <div class="search-bar" role="search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="search" placeholder="Tìm bác sĩ, chuyên khoa, bệnh viện..." aria-label="Tìm kiếm" @bind="_searchKeyword" @onkeydown="OnSearchKeyDown"/>
+                <button class="search-btn" @onclick="GoToSearch">Tìm</button>
+            </div>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="hero-stat-val">3</div><div class="hero-stat-lbl">Lịch hẹn sắp tới</div></div>
+            <div class="hero-stat"><div class="hero-stat-val accent">12</div><div class="hero-stat-lbl">Lần khám trước</div></div>
+        </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+        <div class="stat-pill"><div class="stat-val">3</div><div class="stat-lbl">Lịch sắp tới</div></div>
+        <div class="stat-pill"><div class="stat-val">12</div><div class="stat-lbl">Lần khám</div></div>
+        <div class="stat-pill"><div class="stat-val">4.9</div><div class="stat-lbl">Đánh giá TB</div></div>
+    </div>
+
+    <!-- Booking Section -->
+    <section class="section">
+        <div class="sec-head">
+            <span class="sec-title">Đặt lịch khám</span>
+        </div>
+        <div class="booking-grid">
+            <div class="booking-card" role="button" tabindex="0" @onclick="@(e => BookDoctor())">
+                <div class="bk-icon" style="background:var(--blue-bg)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                    <div class="bk-title">Theo bác sĩ</div>
+                    <div class="bk-sub">Chọn bác sĩ chuyên khoa bạn muốn rồi đặt ngày giờ phù hợp</div>
+                    <div class="bk-cta" style="color:var(--blue)">Chọn bác sĩ →</div>
+                </div>
+            </div>
+            <div class="booking-card" role="button" tabindex="0" @onclick="@(e => BookByDate())">
+                <div class="bk-icon" style="background:var(--green-bg)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </div>
+                <div>
+                    <div class="bk-title">Theo ngày</div>
+                    <div class="bk-sub">Chọn ngày khám trước, hệ thống hiển thị bác sĩ còn lịch trống</div>
+                    <div class="bk-cta" style="color:var(--green)">Xem lịch →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Appointments -->
+    <section class="section">
+        <div class="sec-head">
+            <span class="sec-title">Lịch hẹn sắp tới</span>
+            <a href="#" class="sec-link">Xem tất cả</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="upcoming-card" role="button" tabindex="0">
+                <div class="upcoming-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+                </div>
+                <div style="flex:1">
+                    <div class="up-eyebrow">Lịch khám sắp tới</div>
+                    <div class="up-doc">BS. Trần Văn Nam — Tim mạch</div>
+                    <div class="up-meta">Thứ Ba 28/04 · 09:30 · Phòng 204, Tầng 2</div>
+                </div>
+                <div class="up-arrow">›</div>
+            </div>
+            <div class="upcoming-card" role="button" tabindex="0">
+                <div class="upcoming-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+                </div>
+                <div style="flex:1">
+                    <div class="up-eyebrow">Lịch khám sắp tới</div>
+                    <div class="up-doc">BS. Phạm Thị Lan — Nội tổng quát</div>
+                    <div class="up-meta">Thứ Hai 05/05 · 14:00 · Phòng 101, Tầng 1</div>
+                </div>
+                <div class="up-arrow">›</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Specialties -->
+    <section class="section">
+        <div class="sec-head">
+            <span class="sec-title">Chuyên khoa</span>
+            <a href="#" class="sec-link">Xem tất cả</a>
+        </div>
+        <div class="spec-grid">
+            <SpecialtyChip Name="Tim mạch"  Count="12 BS" BgColor="var(--red-bg)"    TextColor="#A32D2D" Icon="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+            <SpecialtyChip Name="Thần kinh" Count="8 BS"  BgColor="var(--purple-bg)" TextColor="#5B21B6" Icon="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+            <SpecialtyChip Name="Tiêu hóa"  Count="10 BS" BgColor="var(--green-bg)"  TextColor="#0F6E56" Icon="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>
+            <SpecialtyChip Name="Mắt"       Count="6 BS"  BgColor="var(--orange-bg)" TextColor="#A04A12" Icon="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+            <SpecialtyChip Name="Nhi khoa"  Count="9 BS"  BgColor="var(--pink-bg)"   TextColor="#9D174D" Icon="M9 2v6l-4 4v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8l-4-4V2M9 2h6"/>
+            <SpecialtyChip Name="Da liễu"   Count="7 BS"  BgColor="#EAF3DE"          TextColor="#2F6B1A" Icon="M12 8a5 5 0 1 0-5 5M20 21a8 8 0 1 0-16 0"/>
+            <SpecialtyChip Name="Răng hàm"  Count="5 BS"  BgColor="#FAECE7"          TextColor="#993C1D" Icon="M10 2v7.5a2.5 2.5 0 0 1-5 0V2M7 2v20M21 16V2h-4a4 4 0 0 0-4 4v3a4 4 0 0 0 4 4h4ZM21 16v6"/>
+            <SpecialtyChip Name="Tất cả"    Count="18 khoa" BgColor="var(--card)"    TextColor="var(--t2)" Icon="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 0 0-2 0M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 0 0-2 0M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 0 0-2 0"/>
+        </div>
+    </section>
+
+    <!-- Featured Doctors -->
+    <section class="section">
+        <div class="sec-head">
+            <span class="sec-title">Bác sĩ nổi bật</span>
+            <a href="#" class="sec-link">Xem tất cả</a>
+        </div>
+        <div class="doctors-grid">
+            <DoctorRow Name="BS. Trần Văn Nam" Specialty="Tim mạch"       Rating="4.9" ReviewCount="128" Initials="TN" Avatar="linear-gradient(135deg, var(--blue-mid), var(--blue-bg))" IsOnline="true"/>
+            <DoctorRow Name="BS. Phạm Thị Lan" Specialty="Nội tổng quát"  Rating="4.8" ReviewCount="96"  Initials="PL" Avatar="linear-gradient(135deg,#E1F5EE,#B2DFDB)"               IsOnline="true"/>
+            <DoctorRow Name="BS. Minh Hùng"    Specialty="Thần kinh"      Rating="4.7" ReviewCount="74"  Initials="MH" Avatar="linear-gradient(135deg,#FDE8F0,#FCE7F3)"               IsOnline="false"/>
+        </div>
+        <div class="docs-scroll-wrap">
+            <div class="docs-scroll">
+                <DoctorCardMobile Name="BS. Trần Văn Nam" Specialty="Tim mạch"      Rating="4.9" ReviewCount="128" Initials="TN" Avatar="linear-gradient(135deg, var(--blue-mid), var(--blue-bg))" IsOnline="true"/>
+                <DoctorCardMobile Name="BS. Phạm Thị Lan" Specialty="Nội tổng quát" Rating="4.8" ReviewCount="96"  Initials="PL" Avatar="linear-gradient(135deg,#E1F5EE,#B2DFDB)"               IsOnline="true"/>
+                <DoctorCardMobile Name="BS. Minh Hùng"    Specialty="Thần kinh"     Rating="4.7" ReviewCount="74"  Initials="MH" Avatar="linear-gradient(135deg,#FDE8F0,#FCE7F3)"               IsOnline="false"/>
+                <DoctorCardMobile Name="BS. Lê Thanh"     Specialty="Da liễu"       Rating="4.6" ReviewCount="58"  Initials="LT" Avatar="linear-gradient(135deg,#EDE9F9,#DDD6FE)"               IsOnline="false"/>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Banner -->
+    <section class="ai-banner">
+        <div class="ai-icon">🩺</div>
+        <div>
+            <div class="ai-eyebrow">AI Tư vấn sức khoẻ</div>
+            <div class="ai-title">Hỏi đáp nhanh với AI MediCare</div>
+            <div class="ai-sub">Miễn phí · Bảo mật · Hoạt động 24/7</div>
+        </div>
+        <button class="ai-btn">Bắt đầu ngay →</button>
+    </section>
+
+    <!-- Utilities -->
+    <section class="section">
+        <div class="sec-head"><span class="sec-title">Tiện ích</span></div>
+        <div class="utils-grid">
+            <UtilityCard Name="Tra cứu phiếu" Sub="Tìm & in phiếu khám"/>
+            <UtilityCard Name="Tư vấn online"  Sub="Live chat y tế 24/7"/>
+            <UtilityCard Name="Hồ sơ bệnh"     Sub="Xem lịch sử khám"/>
+        </div>
+    </section>
+</main>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" aria-label="Điều hướng chính">
+    <div class="nav-tab active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nav-tab-lbl" style="color:var(--blue)">Trang chủ</span>
+        <div class="nav-dot"></div>
+    </div>
+    <div class="nav-tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="nav-tab-lbl">Lịch hẹn</span>
+    </div>
+    <div class="nav-tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav-tab-lbl">Tư vấn</span>
+    </div>
+    <div class="nav-tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-tab-lbl">Hồ sơ</span>
+    </div>
+</nav>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool   _isLoggedIn   = false;
+    private string _userName     = "";
+    private string _userInitials = "";
+    private bool   _dropdownOpen = false;
+    private bool   mobileNavOpen = false;
+    private bool   _toastChecked = false;
+
+    private ToastNotification? _toast;
+    private ElementReference   _dropdownRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var state = await AuthState;
+            var user  = state.User;
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                _isLoggedIn = true;
+                _userName = user.FindFirst("FullName")?.Value
+                         ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                         ?? "Người dùng";
+                _userInitials = BuildInitials(_userName);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _toastChecked) return;
+        _toastChecked = true;
+
+        // Read ?t= directly from window.location.search (reliable in all render modes).
+        // amsConsumeToastParam() also calls history.replaceState to clean the URL.
+        var toast = await JS.InvokeAsync<string?>("amsConsumeToastParam");
+        if (!string.IsNullOrEmpty(toast))
+            await JS.InvokeVoidAsync("amsShowToast", toast, "info");
+    }
+
+    // ── User button / dropdown ──────────────────────────────────────────────
+    private void ToggleDropdown() => _dropdownOpen = !_dropdownOpen;
+    private void CloseDropdown()  => _dropdownOpen = false;
+
+    private void GoToProfile()       { _dropdownOpen = false; Nav.NavigateTo("/benhnhan/profile"); }
+    private void GoToPhieuKham()     { _dropdownOpen = false; Nav.NavigateTo("/benhnhan/phieu-kham"); }
+    private void GoToNotifications() { _dropdownOpen = false; Nav.NavigateTo("/benhnhan/thong-bao"); }
+
+    private async Task Logout()
+    {
+        _dropdownOpen = false;
+        // Use window.location.href via JS — bypasses Blazor enhanced navigation
+        // which intercepts <a href> clicks and silently swallows non-Blazor routes.
+        // This is the only reliable way to navigate to a server endpoint from Blazor Server.
+        await JS.InvokeVoidAsync("amsNavigate", "/auth/do-logout");
+    }
+
+    private void GoToLogin() => Nav.NavigateTo("/auth/login");
+
+    // ── Nav helpers ─────────────────────────────────────────────────────────
+    private void ToggleNav() => mobileNavOpen = !mobileNavOpen;
+    private void BookDoctor() => Nav.NavigateTo("/booking/doctors");
+    private void BookByDate() => Nav.NavigateTo("/booking/doctors");
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    private string _searchKeyword = "";
+
+    private void GoToSearch()
+    {
+        var url = string.IsNullOrWhiteSpace(_searchKeyword)
+            ? "/booking/doctors"
+            : $"/booking/doctors?keyword={Uri.EscapeDataString(_searchKeyword)}";
+        Nav.NavigateTo(url);
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") GoToSearch();
+    }
+
+    private static string BuildInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        // If name looks like a phone number → use first digit
+        if (name.StartsWith("0") && name.Length >= 9) return name[..1].ToUpper();
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpper()
+            : name[..Math.Min(2, name.Length)].ToUpper();
+    }
+}

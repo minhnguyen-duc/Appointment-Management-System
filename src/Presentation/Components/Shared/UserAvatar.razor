@@ -1,0 +1,13 @@
+<div class="user-avatar d-flex align-items-center gap-2">
+    <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+         style="width:32px;height:32px;font-size:13px;font-weight:600;">
+        @_initials
+    </div>
+    <span class="d-none d-md-inline text-muted small">@_name</span>
+</div>
+
+@code {
+    private string _initials = "U";
+    private string _name = "User";
+    // TODO: inject ICurrentUserService and populate
+}

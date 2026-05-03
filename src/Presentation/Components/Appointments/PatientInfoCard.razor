@@ -1,0 +1,23 @@
+<div class="card @Class">
+    <div class="card-header fw-semibold">Bệnh nhân</div>
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar-circle bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:48px;height:48px;font-size:18px;font-weight:600;">
+                @(string.IsNullOrWhiteSpace(PatientName) ? "?" : PatientName[0].ToString().ToUpper())
+            </div>
+            <div>
+                <div class="fw-semibold">@PatientName</div>
+                <div class="text-muted small">@Phone</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? PatientName { get; set; }
+    [Parameter] public string? Phone { get; set; }
+    [Parameter] public string? Class { get; set; }
+    // Note: AppointmentDto doesn't expose Patient object; use PatientName/Phone params
+    [Parameter] public object? Patient { get; set; } // kept for interface compat, use PatientName instead
+}

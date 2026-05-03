@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCare — Đăng nhập</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base: #F2F0EB;
+    --bg-card: #FAFAF7;
+    --bg-white: #FFFFFF;
+    --text-primary: #1A1A17;
+    --text-secondary: #6B6965;
+    --text-tertiary: #A8A5A1;
+    --border: rgba(0,0,0,0.08);
+    --border-med: rgba(0,0,0,0.12);
+    --blue-bg: #E6F1FB;
+    --blue-mid: #B5D4F4;
+    --blue-text: #0C447C;
+    --blue-dark: #042C53;
+    --blue-btn: #185FA5;
+    --green-bg: #E1F5EE;
+    --green-text: #0F6E56;
+    --red-bg: #FCEBEB;
+    --red-text: #A32D2D;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  /* ===== LOGO ===== */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 32px;
+    color: var(--text-primary);
+  }
+  .logo-mark {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--blue-bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 18px; height: 18px; }
+
+  /* ===== CARD ===== */
+  .login-card {
+    background: var(--bg-white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 400px;
+    padding: 32px 28px;
+  }
+
+  /* ===== SCREENS ===== */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ===== TYPOGRAPHY ===== */
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .card-sub strong { color: var(--text-primary); }
+
+  /* ===== LABEL ===== */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* ===== PHONE INPUT ===== */
+  .phone-wrapper {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .phone-prefix {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    height: 46px;
+  }
+  .phone-input {
+    flex: 1;
+    height: 46px;
+    padding: 0 14px;
+    font-size: 15px;
+    font-family: 'DM Mono', monospace;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .phone-input:focus {
+    border-color: var(--blue-btn);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.08);
+  }
+  .phone-input::placeholder { color: var(--text-tertiary); }
+
+  /* ===== ERROR / HINT ===== */
+  .field-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+  }
+  .field-error {
+    font-size: 12px;
+    color: var(--red-text);
+    margin-bottom: 20px;
+    display: none;
+  }
+  .field-error.show { display: block; }
+
+  /* ===== OTP BOXES ===== */
+  .otp-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 24px 0 8px;
+  }
+  .otp-box {
+    width: 50px; height: 56px;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: var(--bg-white);
+    color: var(--text-primary);
+  }
+  .otp-box:focus {
+    border-color: var(--blue-btn);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.08);
+  }
+  .otp-box.filled { border-color: var(--blue-mid); }
+  .otp-box.error { border-color: var(--red-text); }
+
+  /* ===== OTP TIMER & RESEND ===== */
+  .otp-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+  .timer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+  }
+  .timer-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border-med);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--blue-text);
+    border-color: var(--blue-mid);
+    position: relative;
+  }
+  .resend-btn {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--blue-btn);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .resend-btn:disabled {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+  }
+  .resend-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  /* ===== BUTTON ===== */
+  .btn-primary {
+    width: 100%;
+    height: 46px;
+    background: var(--blue-btn);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    width: 100%;
+    height: 40px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.15s;
+  }
+  .btn-ghost:hover { background: var(--bg-card); }
+
+  /* ===== DIVIDER ===== */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ===== NOTICE BANNER ===== */
+  .notice {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .notice.info { background: var(--blue-bg); color: var(--blue-text); }
+  .notice.warning { background: #FAEEDA; color: #854F0B; }
+  .notice-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ===== SUCCESS ===== */
+  .success-icon {
+    width: 56px; height: 56px;
+    background: var(--green-bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+  }
+  .success-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .success-sub {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGO -->
+<div class="logo">
+  <div class="logo-mark">
+    <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 2L9 16M2 9L16 9" stroke="#185FA5" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  MediCare
+</div>
+
+<!-- LOGIN CARD -->
+<div class="login-card">
+
+  <!-- VIEW 1: Nhập số điện thoại -->
+  <div class="view active" id="view-phone">
+    <p class="card-title">Đăng nhập</p>
+    <p class="card-sub">Nhập số điện thoại để nhận mã OTP xác thực qua SMS hoặc Zalo.</p>
+
+    <label for="phone">Số điện thoại</label>
+    <div class="phone-wrapper">
+      <div class="phone-prefix">
+        🇻🇳 +84
+      </div>
+      <input
+        type="tel"
+        id="phone"
+        class="phone-input"
+        placeholder="09x xxx xxxx"
+        maxlength="10"
+        inputmode="numeric"
+        autocomplete="tel"
+      />
+    </div>
+    <p class="field-hint" id="phone-hint">Hỗ trợ đầu số Việt Nam: 03x, 05x, 07x, 08x, 09x</p>
+    <p class="field-error" id="phone-error">Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.</p>
+
+    <button class="btn-primary" id="btn-send-otp" onclick="sendOtp()">
+      <span>Gửi mã OTP</span>
+      <span style="font-size:16px">→</span>
+    </button>
+  </div>
+
+  <!-- VIEW 2: Nhập OTP -->
+  <div class="view" id="view-otp">
+    <p class="card-title">Nhập mã OTP</p>
+    <p class="card-sub">Mã 6 chữ số đã được gửi đến <strong id="phone-display"></strong>. Mã có hiệu lực trong <strong>2 phút</strong>.</p>
+
+    <div class="notice info" id="notice-channel">
+      <span class="notice-icon">💬</span>
+      <span>Mã được gửi qua <strong>SMS / Zalo</strong>. Kiểm tra tin nhắn của bạn.</span>
+    </div>
+
+    <div class="notice warning" id="notice-limit" style="display:none">
+      <span class="notice-icon">⚠️</span>
+      <span>Bạn đã gửi lại <strong id="resend-used">0</strong>/3 lần. Vượt quá giới hạn sẽ bị tạm khoá 10 phút.</span>
+    </div>
+
+    <div class="otp-row">
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-0"/>
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-1"/>
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-2"/>
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-3"/>
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-4"/>
+      <input class="otp-box" type="tel" maxlength="1" inputmode="numeric" id="otp-5"/>
+    </div>
+    <p class="field-error" id="otp-error">Mã OTP không đúng. Vui lòng thử lại.</p>
+
+    <div class="otp-meta">
+      <div class="timer">
+        <div class="timer-circle" id="timer-display">30</div>
+        <span>giây còn lại</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <button class="resend-btn" id="btn-resend" disabled onclick="resendOtp()">Gửi lại mã</button>
+        <span class="resend-count" id="resend-count-label"></span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-verify" onclick="verifyOtp()">
+      Xác nhận
+    </button>
+    <button class="btn-ghost" onclick="backToPhone()">← Đổi số điện thoại</button>
+  </div>
+
+  <!-- VIEW 3: Thành công -->
+  <div class="view" id="view-success">
+    <div class="success-icon">✅</div>
+    <p class="success-title">Đăng nhập thành công!</p>
+    <p class="success-sub">Xác thực hoàn tất. Đang chuyển hướng đến trang bệnh nhân...</p>
+    <div style="width:100%;background:var(--border);border-radius:99px;height:4px;overflow:hidden">
+      <div id="redirect-bar" style="height:100%;background:var(--blue-btn);border-radius:99px;width:0%;transition:width 2.5s linear"></div>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text-tertiary);margin-top:8px">Tự động chuyển sau 3 giây</p>
+  </div>
+
+  <!-- VIEW 4: Bị khoá -->
+  <div class="view" id="view-locked">
+    <div style="width:56px;height:56px;background:var(--red-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px">🔒</div>
+    <p class="success-title" style="color:var(--red-text)">Tài khoản tạm thời bị khoá</p>
+    <p class="success-sub">Bạn đã gửi lại OTP quá 3 lần. Vui lòng thử lại sau <strong id="lock-timer">10:00</strong> phút.</p>
+    <div class="divider"></div>
+    <button class="btn-primary" id="btn-unlock" disabled>
+      Mở khoá sau <span id="lock-countdown">10:00</span>
+    </button>
+    <button class="btn-ghost" onclick="backToPhone()">← Quay lại</button>
+  </div>
+
+</div>
+
+<!-- ===== FOOTER ===== -->
+<p style="margin-top:20px;font-size:11px;color:var(--text-tertiary);text-align:center">
+  Bằng cách đăng nhập, bạn đồng ý với <a href="#" style="color:var(--blue-text)">Điều khoản dịch vụ</a> của MediCare.
+</p>
+
+<script>
+// ===== STATE =====
+const OTP_MAX_RESEND = 3;
+const OTP_RESEND_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_EXPIRE_SECONDS = 120; // 2 minutes
+const OTP_SEND_TIMEOUT_SECONDS = 30; // gateway SLA
+
+let state = {
+  phone: '',
+  otpCode: '',         // simulated OTP
+  resendCount: 0,
+  resendFirstAt: null, // timestamp of first resend
+  timerInterval: null,
+  lockInterval: null,
+  secondsLeft: OTP_EXPIRE_SECONDS,
+  locked: false,
+  lockUntil: null,
+};
+
+// ===== VIETNAM PHONE VALIDATION =====
+// Accepts: 03x, 05x, 07x, 08x, 09x (10 digits), optionally prefixed with 0
+function validateVietnamPhone(phone) {
+  const cleaned = phone.replace(/\s/g, '');
+  // Starts with 0, 10 digits total; valid prefixes: 03,05,07,08,09
+  return /^(0)(3[2-9]|5[6-9]|7[06-9]|8[0-9]|9[0-9])\d{7}$/.test(cleaned);
+}
+
+function formatPhoneDisplay(phone) {
+  // Format: 0xxx xxx xxxx
+  return phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+}
+
+// ===== SIMULATE OTP =====
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+// ===== VIEWS =====
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== SEND OTP =====
+function sendOtp() {
+  const phoneInput = document.getElementById('phone');
+  const phoneError = document.getElementById('phone-error');
+  const phoneHint = document.getElementById('phone-hint');
+  const phone = phoneInput.value.trim();
+
+  // Validate
+  if (!validateVietnamPhone(phone)) {
+    phoneError.classList.add('show');
+    phoneHint.style.display = 'none';
+    phoneInput.style.borderColor = 'var(--red-text)';
+    return;
+  }
+
+  phoneError.classList.remove('show');
+  state.phone = phone;
+  state.otpCode = generateOtp();
+  state.resendCount = 0;
+  state.resendFirstAt = null;
+
+  // DEV: log OTP to console (in production, this goes via SMS/Zalo gateway)
+  console.log(`[DEV] OTP for ${phone}: ${state.otpCode}`);
+
+  document.getElementById('phone-display').textContent = formatPhoneDisplay(phone);
+  updateResendUI();
+  showView('view-otp');
+  startOtpTimer();
+  focusOtpBox(0);
+}
+
+// ===== RESEND OTP =====
+function resendOtp() {
+  const now = Date.now();
+
+  // Check 10-minute window
+  if (state.resendFirstAt && (now - state.resendFirstAt) < OTP_RESEND_WINDOW_MS) {
+    if (state.resendCount >= OTP_MAX_RESEND) {
+      triggerLock();
+      return;
+    }
+  } else {
+    // Reset window
+    state.resendFirstAt = now;
+    state.resendCount = 0;
+  }
+
+  state.resendCount++;
+  if (state.resendCount === 1) state.resendFirstAt = now;
+
+  state.otpCode = generateOtp();
+  console.log(`[DEV] Resent OTP for ${state.phone}: ${state.otpCode} (attempt ${state.resendCount}/${OTP_MAX_RESEND})`);
+
+  // Reset timer
+  clearInterval(state.timerInterval);
+  state.secondsLeft = OTP_EXPIRE_SECONDS;
+  startOtpTimer();
+
+  updateResendUI();
+  clearOtpBoxes();
+  focusOtpBox(0);
+}
+
+function updateResendUI() {
+  const remaining = OTP_MAX_RESEND - state.resendCount;
+  const label = document.getElementById('resend-count-label');
+  const notice = document.getElementById('notice-limit');
+  const used = document.getElementById('resend-used');
+
+  if (state.resendCount > 0) {
+    label.textContent = `Còn ${remaining} lần gửi lại`;
+    notice.style.display = 'flex';
+    used.textContent = state.resendCount;
+  } else {
+    label.textContent = '';
+    notice.style.display = 'none';
+  }
+}
+
+// ===== OTP TIMER =====
+function startOtpTimer() {
+  const display = document.getElementById('timer-display');
+  const resendBtn = document.getElementById('btn-resend');
+  state.secondsLeft = OTP_SEND_TIMEOUT_SECONDS; // starts at 30s per AC2
+
+  resendBtn.disabled = true;
+  display.textContent = state.secondsLeft;
+
+  state.timerInterval = setInterval(() => {
+    state.secondsLeft--;
+    display.textContent = state.secondsLeft;
+    if (state.secondsLeft <= 0) {
+      clearInterval(state.timerInterval);
+      display.textContent = '0';
+      // Enable resend only if under limit
+      if (state.resendCount < OTP_MAX_RESEND) {
+        resendBtn.disabled = false;
+      } else {
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Đã hết lượt';
+      }
+    }
+  }, 1000);
+}
+
+// ===== VERIFY OTP =====
+function verifyOtp() {
+  const entered = Array.from({length: 6}, (_, i) =>
+    document.getElementById(`otp-${i}`).value
+  ).join('');
+
+  const otpError = document.getElementById('otp-error');
+  const boxes = document.querySelectorAll('.otp-box');
+
+  if (entered.length < 6) {
+    otpError.textContent = 'Vui lòng nhập đủ 6 chữ số.';
+    otpError.classList.add('show');
+    return;
+  }
+
+  if (entered !== state.otpCode) {
+    otpError.textContent = 'Mã OTP không đúng. Vui lòng thử lại.';
+    otpError.classList.add('show');
+    boxes.forEach(b => b.classList.add('error'));
+    setTimeout(() => boxes.forEach(b => b.classList.remove('error')), 800);
+    return;
+  }
+
+  // SUCCESS
+  otpError.classList.remove('show');
+  clearInterval(state.timerInterval);
+  showView('view-success');
+
+  // Animate redirect bar
+  setTimeout(() => {
+    document.getElementById('redirect-bar').style.width = '100%';
+  }, 100);
+
+  // Redirect to BENHNHAN interface after 3s
+  setTimeout(() => {
+    redirectToBenhNhan();
+  }, 3000);
+}
+
+function redirectToBenhNhan() {
+  // Redirect to the patient (BENHNHAN) interface
+  // In production: window.location.href = '/benhnhan/dashboard';
+  window.location.href = 'medicare_prototype.html';
+}
+
+// ===== LOCK =====
+function triggerLock() {
+  clearInterval(state.timerInterval);
+  state.locked = true;
+  state.lockUntil = Date.now() + OTP_RESEND_WINDOW_MS;
+  showView('view-locked');
+  startLockCountdown();
+}
+
+function startLockCountdown() {
+  const btn = document.getElementById('btn-unlock');
+  const countdownEl = document.getElementById('lock-countdown');
+  const lockTimerEl = document.getElementById('lock-timer');
+
+  function updateLock() {
+    const remaining = Math.max(0, state.lockUntil - Date.now());
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    const formatted = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    countdownEl.textContent = formatted;
+    lockTimerEl.textContent = formatted;
+
+    if (remaining <= 0) {
+      clearInterval(state.lockInterval);
+      state.locked = false;
+      btn.disabled = false;
+      btn.textContent = 'Thử lại';
+      btn.onclick = () => {
+        state.resendCount = 0;
+        state.resendFirstAt = null;
+        backToPhone();
+      };
+    }
+  }
+
+  updateLock();
+  state.lockInterval = setInterval(updateLock, 1000);
+}
+
+// ===== HELPERS =====
+function backToPhone() {
+  clearInterval(state.timerInterval);
+  clearInterval(state.lockInterval);
+  state.resendCount = 0;
+  state.resendFirstAt = null;
+  state.locked = false;
+  document.getElementById('phone').value = '';
+  document.getElementById('phone').style.borderColor = '';
+  document.getElementById('phone-hint').style.display = '';
+  showView('view-phone');
+}
+
+function clearOtpBoxes() {
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`otp-${i}`);
+    box.value = '';
+    box.classList.remove('filled', 'error');
+  }
+  document.getElementById('otp-error').classList.remove('show');
+}
+
+function focusOtpBox(index) {
+  const box = document.getElementById(`otp-${index}`);
+  if (box) box.focus();
+}
+
+// ===== OTP BOX KEYBOARD NAV =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Phone input: allow only digits
+  document.getElementById('phone').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    this.style.borderColor = '';
+    document.getElementById('phone-error').classList.remove('show');
+    document.getElementById('phone-hint').style.display = '';
+  });
+
+  // Phone input: submit on Enter
+  document.getElementById('phone').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendOtp();
+  });
+
+  // OTP boxes: auto-advance and backspace
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`otp-${i}`);
+
+    box.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(-1);
+      if (this.value) {
+        this.classList.add('filled');
+        if (i < 5) focusOtpBox(i + 1);
+      } else {
+        this.classList.remove('filled');
+      }
+      // Auto-verify when all 6 filled
+      const allFilled = Array.from({length: 6}, (_, j) =>
+        document.getElementById(`otp-${j}`).value
+      ).every(v => v.length === 1);
+      if (allFilled) verifyOtp();
+    });
+
+    box.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && i > 0) {
+        focusOtpBox(i - 1);
+      }
+    });
+
+    // Handle paste (paste full 6-digit code)
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+      for (let j = 0; j < 6 && j < paste.length; j++) {
+        const target = document.getElementById(`otp-${j}`);
+        target.value = paste[j];
+        target.classList.add('filled');
+      }
+      focusOtpBox(Math.min(paste.length, 5));
+      if (paste.length >= 6) verifyOtp();
+    });
+  }
+});
+</script>
+</body>
+</html>

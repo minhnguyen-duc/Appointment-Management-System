@@ -10,8 +10,11 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
     {
         builder.HasKey(d => d.Id);
         builder.Property(d => d.FullName).HasMaxLength(150).IsRequired();
+        builder.Property(d => d.AcademicTitle).HasMaxLength(50).IsRequired();
         builder.Property(d => d.Specialization).HasMaxLength(100).IsRequired();
         builder.Property(d => d.LicenseNumber).HasMaxLength(50).IsRequired();
-        builder.HasIndex(d => d.LicenseNumber).IsUnique();
+        builder.Property(d => d.ConsultationFee).HasPrecision(18, 2);
+        builder.Property(d => d.ImageUrl).HasMaxLength(500);
+        builder.Property(d => d.Bio).HasMaxLength(1000);
     }
 }
