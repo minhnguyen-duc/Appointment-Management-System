@@ -82,16 +82,16 @@
                 @foreach (var doc in _filtered)
                 {
                     <div class="doctor-card" @onclick="() => SelectDoctor(doc)" role="button" tabindex="0">
-                        <div class="doctor-card-banner">
-                            <div class="doctor-card-av">@Initials(doc.FullName)</div>
-                        </div>
+                        <div class="doctor-card-banner"></div>
                         <div class="doctor-card-body">
-                            <span class="doctor-card-title">@doc.AcademicTitle · @doc.Specialization</span>
-                            <div class="doctor-card-name">@doc.FullName</div>
-                            @if (!string.IsNullOrEmpty(doc.Bio))
-                            {
-                                <div class="doctor-card-bio">@doc.Bio</div>
-                            }
+                            <div class="doctor-card-header">
+                                <div class="doctor-card-av">@Initials(doc.FullName)</div>
+                                <div class="doctor-card-info">
+                                    <span class="doctor-card-title">@doc.AcademicTitle · @doc.Specialization</span>
+                                    <div class="doctor-card-name">@doc.FullName</div>
+                                </div>
+                            </div>
+                            <div class="doctor-card-bio">@(doc.Bio ?? " ")</div>
                             <div class="doctor-card-footer">
                                 <div class="doctor-card-fee">
                                     @doc.ConsultationFee.ToString("N0")đ
