@@ -96,7 +96,6 @@
     cursor: pointer;
     transition: transform .2s, box-shadow .2s, border-color .2s;
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    display: flex; flex-direction: column;
 }
 .doctor-card:hover {
     transform: translateY(-3px);
@@ -109,54 +108,51 @@
     background: linear-gradient(90deg, var(--blue), var(--blue-mid));
     flex-shrink: 0;
 }
-.doctor-card-body { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+.doctor-card-body { padding: 14px 16px 16px; }
 
-/* Header row: avatar + title + name + spec */
-.doctor-card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+/* Header row: avatar + title + name */
+.doctor-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
 .doctor-card-av {
-    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
     background: linear-gradient(135deg, var(--blue), var(--blue-dark));
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px; font-weight: 800; color: var(--white);
-    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    font-size: 18px; font-weight: 800; color: var(--white);
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
-.doctor-card-info { flex: 1; min-width: 0; }
+.doctor-card-info { flex: 1; min-width: 0; padding-top: 2px; }
 .doctor-card-title {
     display: inline-block;
     background: var(--blue-bg); color: var(--blue);
     font-size: 10px; font-weight: 700;
-    padding: 2px 9px; border-radius: 999px;
-    margin-bottom: 5px; letter-spacing: .04em;
+    padding: 2px 8px; border-radius: 999px;
+    margin-bottom: 4px; letter-spacing: .04em;
 }
 .doctor-card-name {
-    font-size: 15px; font-weight: 700;
-    color: var(--blue-dark); margin-bottom: 1px;
-    letter-spacing: -.01em;
+    font-size: 14px; font-weight: 700;
+    color: var(--blue-dark);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.doctor-card-spec { font-size: 12px; color: var(--t2); }
-/* Bio */
+/* Bio — fixed 2-line clamp, NO flex stretching */
 .doctor-card-bio {
-    font-size: 12px; color: var(--t2); line-height: 1.6;
-    flex: 1;
+    font-size: 12px; color: var(--t2); line-height: 1.55;
     display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden;
-    min-height: 36px; margin-bottom: 14px;
+    height: 38px; /* fixed height: 2 lines × 19px ≈ 38px — no gap */
+    margin-bottom: 12px;
 }
 /* Footer: fee + button */
 .doctor-card-footer {
     display: flex; align-items: center; justify-content: space-between;
     padding-top: 12px; border-top: 1px solid var(--border);
-    margin-top: auto;
 }
-.doctor-card-fee { font-size: 15px; font-weight: 700; color: var(--green); }
+.doctor-card-fee { font-size: 14px; font-weight: 700; color: var(--green); }
 .doctor-card-fee span { font-size: 11px; font-weight: 400; color: var(--t3); }
 .doctor-card-btn {
     background: var(--blue); color: var(--white);
     font-size: 12px; font-weight: 600;
-    padding: 8px 18px; border-radius: 8px;
+    padding: 8px 16px; border-radius: 8px;
     border: none; cursor: pointer; font-family: var(--font);
-    transition: opacity .15s;
+    transition: opacity .15s; white-space: nowrap;
 }
 .doctor-card-btn:hover { opacity: .88; }
 
@@ -472,11 +468,67 @@
 
 /* ── Mobile ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-    .booking-page { padding: 14px 14px 60px; }
-    .doctor-grid { grid-template-columns: 1fr; gap: 12px; }
+    .booking-page { padding: 14px 12px 60px; }
+
+    /* Doctor grid: single column, tighter */
+    .doctor-grid { grid-template-columns: 1fr; gap: 10px; }
+
+    /* Compact card on mobile */
+    .doctor-card-body { padding: 12px 14px 14px; }
+    .doctor-card-av { width: 42px; height: 42px; font-size: 16px; }
+    .doctor-card-header { gap: 10px; margin-bottom: 8px; }
+    .doctor-card-name { font-size: 13px; }
+    .doctor-card-title { font-size: 9px; padding: 1px 7px; }
+    .doctor-card-bio { font-size: 11px; height: 34px; margin-bottom: 10px; }
+    .doctor-card-fee { font-size: 13px; }
+
+    /* Search + filters */
     .bk-filter-bar { gap: 8px; }
-    .bk-select { min-width: 120px; }
+    .bk-search { padding: 9px 12px; }
+    .bk-select { min-width: 120px; font-size: 12px; padding: 8px 10px; }
+    .bk-page-title { font-size: 18px; }
+    .spec-filter-row { gap: 6px; }
+    .spec-pill { font-size: 11px; padding: 6px 12px; }
+
+    /* Doc summary top banner */
+    .doc-summary-banner-top {
+        padding: 12px 14px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .doc-summary-fee-val { font-size: 14px; }
+    .doc-change-btn { padding: 6px 12px; font-size: 11px; }
+
+    /* Step wizard — smaller */
+    .step-circle { width: 24px; height: 24px; font-size: 11px; }
+    .step-label { font-size: 9px; }
+
+    /* Profile items */
+    .profile-item { padding: 10px 12px; }
+    .profile-av { width: 32px; height: 32px; font-size: 13px; }
+
+    /* Date chips */
+    .date-chip { width: 46px; padding: 8px 3px; }
+    .date-day { font-size: 16px; }
+    .date-dow, .date-mon { font-size: 9px; }
+
+    /* Slots — wrap tighter */
+    .slots-grid { gap: 6px; }
+    .slot-btn { padding: 8px 12px; font-size: 12px; }
+    .slot-remain { display: none; } /* hide count on mobile, just show time */
+
+    /* Forms */
     .form-row { grid-template-columns: 1fr; }
-    .schedule-layout { gap: 14px; }
-    .confirm-table td:first-child { width: 45%; font-size: 12px; }
+    .add-profile-form { padding: 12px; }
+
+    /* Confirm table */
+    .confirm-table td { font-size: 12px; padding: 7px 0; }
+    .confirm-table td:first-child { width: 42%; }
+
+    /* E-ticket */
+    .eticket-stt-num { font-size: 52px; }
+
+    /* Buttons */
+    .bk-btn-primary { font-size: 13px; padding: 12px; }
+    .bk-btn-secondary { font-size: 12px; }
 }
