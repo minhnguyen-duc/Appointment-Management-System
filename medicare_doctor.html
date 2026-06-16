@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCare — Giao diện Bác sĩ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#F2F0EB;--bg-card:#FAFAF7;--bg-white:#FFF;
+    --txt:#1A1A17;--txt2:#6B6965;--txt3:#A8A5A1;
+    --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.12);
+    --blue-bg:#E6F1FB;--blue-mid:#B5D4F4;--blue-txt:#0C447C;--blue-dark:#042C53;--blue-btn:#185FA5;
+    --green-bg:#E1F5EE;--green-txt:#0F6E56;--green-dark:#3B6D11;
+    --red-bg:#FCEBEB;--red-txt:#A32D2D;
+    --purple-bg:#EEEDFE;--purple-txt:#3C3489;
+    --orange-bg:#FAEEDA;--orange-txt:#854F0B;
+    --gold:#BA7517;
+    --r-sm:6px;--r-md:8px;--r-lg:12px;--r-xl:16px;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  }
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+  .topnav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:.5px solid var(--border2);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+  .topnav-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+  .logo-mark{width:30px;height:30px;border-radius:8px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center}
+  .role-badge{font-size:11px;background:var(--purple-bg);color:var(--purple-txt);padding:2px 8px;border-radius:4px;font-weight:500}
+  .screen-tabs{display:flex;gap:4px}
+  .tab-btn{padding:5px 12px;border-radius:99px;font-size:12px;border:.5px solid var(--border);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--txt2);transition:all .15s}
+  .tab-btn:hover{background:var(--bg-card);color:var(--txt)}
+  .tab-btn.active{background:var(--txt);color:#fff;border-color:var(--txt)}
+  .screen{display:none;animation:fadeIn .2s ease}
+  .screen.visible{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .page{max-width:900px;margin:0 auto;padding:24px 16px 48px}
+  .card{background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+  .card-p{padding:16px}
+  button,.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border-radius:var(--r-md);border:.5px solid var(--border);background:var(--bg-white);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;line-height:1;gap:6px}
+  button:hover{border-color:var(--border2);background:var(--bg-card)}
+  button.primary{background:var(--txt);color:#fff;border-color:var(--txt)}
+  button.primary:hover{background:#333}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  input,select,textarea{width:100%;padding:9px 12px;border-radius:var(--r-md);border:.5px solid var(--border2);background:var(--bg-white);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--txt);outline:none;transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue-btn)}
+  textarea{resize:vertical;line-height:1.6}
+  .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-lg);padding:14px}
+  .stat-num{font-size:26px;font-weight:600;margin:6px 0 4px}
+  .queue-row{background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-lg);padding:12px 14px;display:flex;align-items:center;gap:12px;position:relative}
+  .avatar-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+  .section-title{font-size:15px;font-weight:500}
+  .pill{padding:4px 12px;border-radius:99px;font-size:11px;cursor:pointer;border:.5px solid var(--border);background:var(--bg-white);white-space:nowrap}
+  .pill.active{background:var(--txt);color:#fff;border-color:var(--txt)}
+  .grid-2{display:grid;grid-template-columns:1fr 280px;gap:16px}
+  .vitals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .rx-grid{display:grid;grid-template-columns:2.5fr 1fr 1fr 1.5fr 0.5fr;gap:8px;align-items:center}
+  .rx-header{padding:0 6px;margin-bottom:6px;color:var(--txt3)}
+  .rx-row{padding:8px 6px;background:var(--bg);border-radius:6px;margin-bottom:6px}
+  .cal-grid{display:grid;grid-template-columns:80px repeat(7,1fr);border:.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+  .cal-cell{padding:8px 6px;border-right:.5px solid var(--border);border-bottom:.5px solid var(--border)}
+  .cal-cell:last-child{border-right:none}
+  .cal-session{background:var(--bg-white);border:.5px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer}
+  .patient-list-item{padding:10px 12px;background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;margin-bottom:6px;transition:border-color .15s}
+  .patient-list-item:hover{border-color:var(--border2)}
+  .patient-list-item.active{border-color:var(--blue-btn)}
+  .tabs{display:flex;border-bottom:.5px solid var(--border);margin-bottom:16px}
+  .tab-item{padding:8px 16px;font-size:13px;cursor:pointer;color:var(--txt2)}
+  .tab-item.active{border-bottom:2px solid var(--txt);color:var(--txt);font-weight:500;margin-bottom:-1px}
+  .alert-box{border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:flex-start;gap:8px;font-size:12px}
+  .sidebar-card{background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:12px}
+  .sidebar-card:last-child{margin-bottom:0}
+  .field-label{font-size:11px;color:var(--txt3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+  .field-val{font-size:13px;font-weight:500}
+  .mono{font-family:'DM Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="topnav-logo">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M12 14v4"/><path d="M10 16h4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+      </div>
+      MediCare
+    </div>
+    <span class="role-badge">Bác sĩ</span>
+  </div>
+  <div class="screen-tabs">
+    <button class="tab-btn active" onclick="sw(0)">① Dashboard</button>
+    <button class="tab-btn" onclick="sw(1)">② Danh sách BN</button>
+    <button class="tab-btn" onclick="sw(2)">③ Khám &amp; Kê toa</button>
+    <button class="tab-btn" onclick="sw(3)">④ Lịch làm việc</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 1: DASHBOARD
+     ============================================================ -->
+<div class="screen visible" id="s0">
+<div class="page">
+
+  <div style="margin-bottom:20px;">
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:4px;">Thứ Ba, 28/04/2026</div>
+    <div style="font-size:22px;font-weight:500;">Chào buổi sáng, bác sĩ Hùng 👋</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div style="font-size:11px;color:var(--txt2);">Bệnh nhân hôm nay</div>
+      <div class="stat-num">18</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--green-dark);">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--green-dark);display:inline-block;"></span>
+        7 đã khám · 11 chờ
+      </div>
+    </div>
+    <div class="stat-card">
+      <div style="font-size:11px;color:var(--txt2);">Slot tiếp theo</div>
+      <div class="stat-num">09:30</div>
+      <div style="font-size:11px;color:var(--blue-txt);">Nguyễn Thị Lan · STT 08</div>
+    </div>
+    <div class="stat-card">
+      <div style="font-size:11px;color:var(--txt2);">Phiếu khám chờ ký</div>
+      <div class="stat-num">3</div>
+      <div style="font-size:11px;color:var(--gold);">Cần hoàn thiện hôm nay</div>
+    </div>
+    <div class="stat-card">
+      <div style="font-size:11px;color:var(--txt2);">Tái khám tuần này</div>
+      <div class="stat-num">5</div>
+      <div style="font-size:11px;color:var(--txt2);">Thứ 4–6 còn slot</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="section-title">Hàng chờ hôm nay</span>
+        <div style="display:flex;gap:6px;">
+          <div class="pill">Tất cả</div>
+          <div class="pill active">Chờ khám</div>
+          <div class="pill">Đã xong</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="queue-row" style="border-color:var(--blue-btn);">
+          <div style="position:absolute;top:10px;right:12px;font-size:10px;background:var(--blue-bg);color:var(--blue-txt);padding:2px 8px;border-radius:4px;font-weight:500;">● ĐANG KHÁM</div>
+          <div class="avatar-num" style="background:var(--blue-bg);color:var(--blue-txt);">07</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Trần Văn Bình</div>
+            <div style="font-size:11px;color:var(--txt2);">Nam · 45 tuổi · 09:00 · Đau ngực tái phát</div>
+          </div>
+          <button class="primary" style="padding:5px 12px;font-size:11px;" onclick="sw(1)">Xem hồ sơ</button>
+        </div>
+
+        <div class="queue-row">
+          <div style="position:absolute;top:10px;right:12px;font-size:10px;background:var(--green-bg);color:var(--green-txt);padding:2px 8px;border-radius:4px;font-weight:500;">TIẾP THEO</div>
+          <div class="avatar-num" style="background:var(--green-bg);color:var(--green-txt);">08</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Nguyễn Thị Lan</div>
+            <div style="font-size:11px;color:var(--txt2);">Nữ · 52 tuổi · 09:30 · Tái khám tim mạch</div>
+          </div>
+          <button style="padding:5px 12px;font-size:11px;" onclick="sw(1)">Chuẩn bị</button>
+        </div>
+
+        <div class="queue-row">
+          <div class="avatar-num" style="background:var(--bg);color:var(--txt2);">09</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;margin-bottom:2px;">Lê Minh Tuấn</div>
+            <div style="font-size:11px;color:var(--txt2);">Nam · 38 tuổi · 10:00 · Khám lần đầu</div>
+          </div>
+          <span style="font-size:11px;color:var(--txt3);">Chờ</span>
+        </div>
+
+        <div class="queue-row">
+          <div class="avatar-num" style="background:var(--bg);color:var(--txt2);">10</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;margin-bottom:2px;">Phạm Thị Thu</div>
+            <div style="font-size:11px;color:var(--txt2);">Nữ · 61 tuổi · 10:00 · Khó thở, huyết áp cao</div>
+          </div>
+          <span style="font-size:11px;color:var(--txt3);">Chờ</span>
+        </div>
+
+        <div class="queue-row" style="opacity:.5;">
+          <div class="avatar-num" style="background:var(--red-bg);color:var(--red-txt);">06</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;margin-bottom:2px;">Hoàng Văn Đức</div>
+            <div style="font-size:11px;color:var(--txt2);">Nam · 57 tuổi · 08:30 · Đã khám xong</div>
+          </div>
+          <span class="badge" style="background:var(--red-bg);color:var(--red-txt);">Xong</span>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--txt2);">Hiển thị 5 / 18 · <span style="color:var(--blue-txt);cursor:pointer;" onclick="sw(1)">Xem tất cả →</span></div>
+    </div>
+
+    <div>
+      <div class="sidebar-card">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Lịch hôm nay</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--bg);border-radius:6px;"><span>Buổi sáng</span><span style="font-weight:500;">07:30 – 12:00</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--bg);border-radius:6px;"><span>Phòng khám</span><span style="font-weight:500;">204 · Tầng 2</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--bg);border-radius:6px;"><span>Đã khám</span><span style="font-weight:500;color:var(--green-dark);">7 / 18 BN</span></div>
+          <div style="width:100%;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;">
+            <div style="width:38.8%;height:100%;background:var(--txt);border-radius:99px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--txt2);text-align:right;">38% hoàn thành</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Cần xử lý</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:4px;flex-shrink:0;"></span><div>3 phiếu khám chưa điền đủ chẩn đoán</div></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--blue-txt);margin-top:4px;flex-shrink:0;"></span><div>BN Nguyễn Thị Lan có tiền sử dị ứng thuốc Beta</div></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--green-dark);margin-top:4px;flex-shrink:0;"></span><div>5 lịch tái khám tuần sau đang chờ xác nhận</div></div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Thao tác nhanh</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button style="width:100%;padding:8px;font-size:12px;justify-content:flex-start;" onclick="sw(1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9l3 3-3 3"/></svg>
+            Gọi bệnh nhân tiếp theo
+          </button>
+          <button style="width:100%;padding:8px;font-size:12px;justify-content:flex-start;" onclick="sw(2)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Tạo phiếu khám mới
+          </button>
+          <button style="width:100%;padding:8px;font-size:12px;justify-content:flex-start;" onclick="sw(3)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            Xem lịch làm việc tuần
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============================================================
+     SCREEN 2: PATIENT LIST
+     ============================================================ -->
+<div class="screen" id="s1">
+<div class="page">
+  <div style="font-size:21px;font-weight:500;margin-bottom:16px;">Danh sách bệnh nhân · 28/04/2026</div>
+
+  <div style="display:grid;grid-template-columns:290px 1fr;background:var(--bg-white);border:.5px solid var(--border);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow);">
+
+    <div style="border-right:.5px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:13px;font-weight:500;">Bệnh nhân · 28/04</div>
+      <div style="position:relative;">
+        <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Tìm bệnh nhân..." style="padding-left:28px;font-size:12px;"/>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <div style="flex:1;text-align:center;padding:4px 0;border:.5px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--bg-white);">Tất cả (18)</div>
+        <div style="flex:1;text-align:center;padding:4px 0;background:var(--txt);color:#fff;border-radius:6px;font-size:11px;cursor:pointer;">Chờ (11)</div>
+        <div style="flex:1;text-align:center;padding:4px 0;border:.5px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--bg-white);">Xong (7)</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="patient-list-item active">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="width:20px;height:20px;border-radius:50%;background:var(--blue-bg);font-size:10px;font-weight:600;color:var(--blue-txt);display:flex;align-items:center;justify-content:center;">08</span>
+              <span style="font-size:13px;font-weight:500;color:var(--blue-txt);">Nguyễn Thị Lan</span>
+            </div>
+            <span style="font-size:10px;background:var(--blue-bg);color:var(--blue-txt);padding:1px 6px;border-radius:3px;">Tiếp theo</span>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);">09:30 · Nữ · 52t · Tái khám</div>
+        </div>
+        <div class="patient-list-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg);font-size:10px;color:var(--txt2);display:flex;align-items:center;justify-content:center;">09</span><span style="font-size:13px;">Lê Minh Tuấn</span></div>
+            <span style="font-size:10px;color:var(--txt3);">10:00</span>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);">Nam · 38t · Khám lần đầu</div>
+        </div>
+        <div class="patient-list-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg);font-size:10px;color:var(--txt2);display:flex;align-items:center;justify-content:center;">10</span><span style="font-size:13px;">Phạm Thị Thu</span></div>
+            <span style="font-size:10px;color:var(--txt3);">10:00</span>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);">Nữ · 61t · Khó thở, HA cao</div>
+        </div>
+        <div class="patient-list-item" style="opacity:.6;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:20px;height:20px;border-radius:50%;background:var(--red-bg);font-size:10px;color:var(--red-txt);display:flex;align-items:center;justify-content:center;">06</span><span style="font-size:13px;">Hoàng Văn Đức</span></div>
+            <span style="font-size:10px;background:var(--red-bg);color:var(--red-txt);padding:1px 6px;border-radius:3px;">Xong</span>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);">Nam · 57t · Đã kê toa</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--blue-txt);">NL</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:17px;font-weight:500;">Nguyễn Thị Lan</span>
+              <span class="badge" style="background:var(--orange-bg);color:var(--orange-txt);">Tái khám</span>
+            </div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:2px;">Nữ · 52 tuổi · 15/03/1974 · STT: 08 · 09:30</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button style="padding:6px 14px;font-size:12px;">Lịch sử khám</button>
+          <button class="primary" style="padding:6px 14px;font-size:12px;" onclick="sw(2)">Bắt đầu khám →</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab-item active">Thông tin</div>
+        <div class="tab-item">Lịch sử bệnh</div>
+        <div class="tab-item">Toa thuốc cũ</div>
+        <div class="tab-item">Phiếu khám</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;font-size:12px;margin-bottom:16px;">
+        <div><div class="field-label">Họ tên</div><div>Nguyễn Thị Lan</div></div>
+        <div><div class="field-label">CMND/CCCD</div><div>079374000XXX</div></div>
+        <div><div class="field-label">Số điện thoại</div><div>0912 345 678</div></div>
+        <div><div class="field-label">Số thẻ BHYT</div><div>HS 4012093748XXXX</div></div>
+        <div><div class="field-label">Địa chỉ</div><div>45 Lê Lợi, P.7, Q.3, TP.HCM</div></div>
+        <div><div class="field-label">Ngày đăng ký</div><div>24/04/2026 lúc 10:15</div></div>
+      </div>
+
+      <div class="alert-box" style="background:var(--red-bg);border:.5px solid #E5A3A3;margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red-txt)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <div style="color:var(--red-txt);font-size:12px;"><strong>Dị ứng:</strong> Beta-blockers (Propranolol), Aspirin — cần thận trọng khi kê đơn</div>
+      </div>
+
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Lần khám trước — 14/01/2026</div>
+      <div style="background:var(--bg);border:.5px solid var(--border);border-radius:var(--r-md);padding:12px;font-size:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><div class="field-label">Chẩn đoán</div><div>Tăng huyết áp giai đoạn 2 (ICD I10)</div></div>
+          <div><div class="field-label">Hẹn tái khám</div><div style="color:var(--blue-txt);">28/04/2026 (hôm nay)</div></div>
+          <div style="grid-column:1/-1;"><div class="field-label">Toa thuốc đã kê</div><div>Amlodipine 5mg × 30v · Losartan 50mg × 30v</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ============================================================
+     SCREEN 3: EXAMINATION + PRESCRIPTION
+     ============================================================ -->
+<div class="screen" id="s2">
+<div class="page">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--txt2);cursor:pointer;" onclick="sw(1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Danh sách
+        <span style="color:var(--txt3);">/</span>
+      </div>
+      <div style="font-size:15px;font-weight:500;">Phiếu khám — Nguyễn Thị Lan</div>
+      <span class="badge" style="background:var(--blue-bg);color:var(--blue-txt);">STT 08 · 09:30</span>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button style="padding:6px 14px;font-size:12px;">Lưu nháp</button>
+      <button class="primary" style="padding:6px 14px;font-size:12px;">Hoàn tất &amp; Ký phiếu</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="card card-p">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Chỉ số sinh tồn</div>
+        <div class="vitals-grid">
+          <div>
+            <div style="font-size:11px;color:var(--txt2);margin-bottom:5px;">Huyết áp (mmHg)</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="text" value="145" style="width:52px;text-align:center;font-size:13px;font-weight:500;"/>
+              <span style="font-size:12px;color:var(--txt3);">/</span>
+              <input type="text" value="92" style="width:52px;text-align:center;font-size:13px;font-weight:500;"/>
+            </div>
+          </div>
+          <div><div style="font-size:11px;color:var(--txt2);margin-bottom:5px;">Nhịp tim (bpm)</div><input type="text" value="88" style="font-size:13px;font-weight:500;text-align:center;"/></div>
+          <div><div style="font-size:11px;color:var(--txt2);margin-bottom:5px;">Nhiệt độ (°C)</div><input type="text" value="36.8" style="font-size:13px;font-weight:500;text-align:center;"/></div>
+          <div><div style="font-size:11px;color:var(--txt2);margin-bottom:5px;">Cân nặng (kg)</div><input type="text" value="64" style="font-size:13px;font-weight:500;text-align:center;"/></div>
+        </div>
+      </div>
+
+      <div class="card card-p">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Triệu chứng &amp; Chẩn đoán</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div>
+            <div style="font-size:12px;color:var(--txt2);margin-bottom:5px;">Triệu chứng lâm sàng</div>
+            <textarea style="min-height:70px;">Đau đầu, chóng mặt, cảm giác tim đập nhanh. Huyết áp tăng nhẹ so với lần trước. Bệnh nhân tuân thủ uống thuốc đều.</textarea>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--txt2);margin-bottom:5px;">Chẩn đoán (ICD-10)</div>
+            <input type="text" value="I10 — Tăng huyết áp nguyên phát" style="font-size:13px;"/>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--txt2);margin-bottom:5px;">Lời dặn bác sĩ</div>
+            <textarea style="min-height:56px;">Hạn chế muối, tập thể dục nhẹ 30 phút/ngày. Uống thuốc đúng giờ, không tự ý bỏ thuốc.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-p">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:500;">Toa thuốc (TOATHUOC)</div>
+          <button style="padding:5px 12px;font-size:11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm thuốc
+          </button>
+        </div>
+        <div class="rx-grid rx-header" style="font-size:11px;">
+          <div>Tên thuốc</div><div>Liều dùng</div><div>Số lượng</div><div>Cách dùng</div><div></div>
+        </div>
+        <div class="rx-grid rx-row">
+          <div><div style="font-size:12px;font-weight:500;">Amlodipine 5mg</div><div style="font-size:10px;color:var(--txt2);">Nhóm: Chẹn kênh Ca · Losartan</div></div>
+          <input type="text" value="1 viên/ngày" style="font-size:11px;padding:5px 8px;"/>
+          <input type="text" value="30 viên" style="font-size:11px;padding:5px 8px;"/>
+          <input type="text" value="Uống sáng sau ăn" style="font-size:11px;padding:5px 8px;"/>
+          <button style="padding:4px;width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:var(--red-txt);">✕</button>
+        </div>
+        <div class="rx-grid rx-row">
+          <div><div style="font-size:12px;font-weight:500;">Losartan 50mg</div><div style="font-size:10px;color:var(--txt2);">Nhóm: ARB · Hoạt chất: Losartan</div></div>
+          <input type="text" value="1 viên/ngày" style="font-size:11px;padding:5px 8px;"/>
+          <input type="text" value="30 viên" style="font-size:11px;padding:5px 8px;"/>
+          <input type="text" value="Uống tối trước ăn" style="font-size:11px;padding:5px 8px;"/>
+          <button style="padding:4px;width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:var(--red-txt);">✕</button>
+        </div>
+        <div style="border:.5px dashed var(--border);border-radius:6px;padding:9px 12px;">
+          <input type="text" placeholder="🔍 Nhập tên thuốc để tìm (auto-complete từ bảng THUOC)..." style="border:none;outline:none;background:transparent;font-size:12px;"/>
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="sidebar-card">
+        <div style="font-size:12px;font-weight:500;margin-bottom:10px;">Bệnh nhân</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--blue-txt);">NL</div>
+          <div><div style="font-size:12px;font-weight:500;">Nguyễn Thị Lan</div><div style="font-size:10px;color:var(--txt2);">Nữ · 52 tuổi</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">Mã BN</span><span>BN20240015</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">BHYT</span><span>Còn hạn</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">Lần khám</span><span>Lần 4</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div style="font-size:12px;font-weight:500;margin-bottom:10px;">Hẹn tái khám</div>
+        <input type="text" value="28/07/2026" style="font-size:13px;font-weight:500;margin-bottom:8px;"/>
+        <div style="font-size:11px;color:var(--txt2);">Sau 3 tháng — hệ thống tự nhắc SMS</div>
+      </div>
+
+      <div class="sidebar-card">
+        <div style="font-size:12px;font-weight:500;margin-bottom:10px;">Phiếu khám</div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">Mã phiếu</span><span class="mono">PK2026042800408</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">Thanh toán</span><span style="color:var(--green-dark);">✓ 500.000đ</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--txt3);">Trạng thái</span><span style="color:var(--gold);">Chưa ký</span></div>
+        </div>
+        <button class="primary" style="width:100%;margin-top:12px;padding:8px;font-size:12px;">Ký &amp; Xuất phiếu</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============================================================
+     SCREEN 4: SCHEDULE MANAGEMENT
+     ============================================================ -->
+<div class="screen" id="s3">
+<div class="page">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <div style="font-size:21px;font-weight:500;margin-bottom:3px;">Lịch làm việc</div>
+      <div style="font-size:13px;color:var(--txt2);">Tuần 27/04 – 03/05/2026 · Tim mạch · Phòng 204</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button style="padding:6px 12px;font-size:12px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Tuần trước
+      </button>
+      <div style="padding:6px 14px;background:var(--blue-bg);color:var(--blue-txt);border-radius:var(--r-md);font-size:12px;font-weight:500;">Tuần này</div>
+      <button style="padding:6px 12px;font-size:12px;">
+        Tuần sau
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button class="primary" style="padding:6px 14px;font-size:12px;">+ Thêm ca trực</button>
+    </div>
+  </div>
+
+  <div class="cal-grid">
+    <!-- Header -->
+    <div class="cal-cell" style="background:var(--bg-white);font-size:10px;color:var(--txt3);">Ca / Ngày</div>
+    <div class="cal-cell" style="background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt2);">T2</div><div style="font-size:14px;font-weight:500;">27</div></div>
+    <div class="cal-cell" style="background:var(--blue-bg);text-align:center;"><div style="font-size:10px;color:var(--blue-txt);">T3</div><div style="font-size:14px;font-weight:600;color:var(--blue-txt);">28</div><div style="font-size:9px;color:var(--blue-txt);">Hôm nay</div></div>
+    <div class="cal-cell" style="background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt2);">T4</div><div style="font-size:14px;font-weight:500;">29</div></div>
+    <div class="cal-cell" style="background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt2);">T5</div><div style="font-size:14px;font-weight:500;">30</div></div>
+    <div class="cal-cell" style="background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt2);">T6</div><div style="font-size:14px;font-weight:500;">01</div></div>
+    <div class="cal-cell" style="background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt2);">T7</div><div style="font-size:14px;font-weight:500;">02</div></div>
+    <div class="cal-cell" style="border-right:none;background:var(--bg-white);text-align:center;"><div style="font-size:10px;color:var(--txt3);">CN</div><div style="font-size:14px;color:var(--txt3);">03</div></div>
+
+    <!-- Buổi sáng -->
+    <div class="cal-cell" style="background:var(--bg-white);font-size:11px;font-weight:500;">☀ Sáng<br/><span style="font-weight:400;color:var(--txt3);font-size:10px;">07:30–12:00</span></div>
+    <div class="cal-cell"><div class="cal-session"><div style="font-size:11px;font-weight:500;">8 đăng ký</div><div style="font-size:10px;color:var(--txt2);">Còn 10 slot</div></div></div>
+    <div class="cal-cell" style="background:#f0f6fd;">
+      <div class="cal-session" style="background:var(--blue-bg);border-color:var(--blue-mid);">
+        <div style="font-size:11px;font-weight:500;color:var(--blue-txt);">18 BN · 7 xong</div>
+        <div style="width:100%;height:3px;background:rgba(12,68,124,.15);border-radius:99px;margin-top:4px;overflow:hidden;"><div style="width:38%;height:100%;background:var(--blue-txt);border-radius:99px;"></div></div>
+      </div>
+    </div>
+    <div class="cal-cell"><div class="cal-session"><div style="font-size:11px;font-weight:500;">10 đăng ký</div><div style="font-size:10px;color:var(--txt2);">Còn 8 slot</div></div></div>
+    <div class="cal-cell" style="background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+    <div class="cal-cell"><div class="cal-session"><div style="font-size:11px;font-weight:500;">6 đăng ký</div><div style="font-size:10px;color:var(--txt2);">Còn 12 slot</div></div></div>
+    <div class="cal-cell" style="background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+    <div class="cal-cell" style="border-right:none;background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+
+    <!-- Buổi chiều -->
+    <div class="cal-cell" style="background:var(--bg-white);font-size:11px;font-weight:500;border-bottom:none;">🌙 Chiều<br/><span style="font-weight:400;color:var(--txt3);font-size:10px;">13:30–17:30</span></div>
+    <div class="cal-cell" style="border-bottom:none;"><div class="cal-session"><div style="font-size:11px;font-weight:500;">8 đăng ký</div><div style="font-size:10px;color:var(--txt2);">Còn 10 slot</div></div></div>
+    <div class="cal-cell" style="border-bottom:none;"><div style="border:.5px dashed var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;"><span style="font-size:10px;color:var(--txt3);">+ Mở ca</span></div></div>
+    <div class="cal-cell" style="border-bottom:none;"><div class="cal-session" style="border-color:var(--red-txt);"><div style="font-size:11px;font-weight:500;">15 đăng ký</div><div style="font-size:10px;color:var(--red-txt);">Đã đầy slot</div></div></div>
+    <div class="cal-cell" style="border-bottom:none;"><div class="cal-session"><div style="font-size:11px;font-weight:500;">4 đăng ký</div><div style="font-size:10px;color:var(--txt2);">Còn 14 slot</div></div></div>
+    <div class="cal-cell" style="border-bottom:none;background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+    <div class="cal-cell" style="border-bottom:none;background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+    <div class="cal-cell" style="border-bottom:none;border-right:none;background:var(--bg);"><div style="font-size:10px;color:var(--txt3);text-align:center;padding-top:10px;">Nghỉ</div></div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:11px;color:var(--txt2);">
+    <div style="display:flex;gap:14px;">
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue-bg);border:.5px solid var(--blue-mid);display:inline-block;"></span>Hôm nay</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--bg-white);border:.5px solid var(--border);display:inline-block;"></span>Có lịch</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--bg);display:inline-block;"></span>Nghỉ</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--red-bg);display:inline-block;"></span>Đầy slot</span>
+    </div>
+    <div>Tổng tuần: <strong>61 BN</strong> · 5 ca · BufferTime: 15 phút/ca</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  function sw(i){
+    document.querySelectorAll('.screen').forEach((s,j)=>s.classList.toggle('visible',i===j));
+    document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',i===j));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>

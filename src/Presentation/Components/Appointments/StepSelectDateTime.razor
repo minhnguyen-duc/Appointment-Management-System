@@ -19,7 +19,7 @@
                 <button class="slot-btn @(slot.IsAvailable ? "" : "disabled")"
                         disabled="@(!slot.IsAvailable)"
                         @onclick="() => SelectSlot(slot)">
-                    @slot.StartTime.ToString("HH:mm")
+                    @slot.Start.ToString("HH:mm")
                 </button>
             }
         </div>
@@ -52,5 +52,5 @@
     }
 
     private async Task SelectSlot(TimeSlotDto slot)
-        => await OnSelected.InvokeAsync(slot.StartTime);
+        => await OnSelected.InvokeAsync(slot.Start);
 }

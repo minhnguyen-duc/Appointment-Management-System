@@ -1,0 +1,16 @@
+@page "/benhnhan/dashboard"
+@page "/benhnhan"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject NavigationManager Nav
+
+<PageTitle>Trang chủ bệnh nhân — MediCare</PageTitle>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Redirect to Homepage/Homepage.razor at /homepage
+        // forceLoad: false — stay within Blazor SPA so OnAfterRenderAsync
+        // in Homepage.razor fires and reads the ams-toast cookie
+        Nav.NavigateTo("/homepage", forceLoad: false);
+    }
+}

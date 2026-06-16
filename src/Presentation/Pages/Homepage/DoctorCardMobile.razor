@@ -1,0 +1,30 @@
+@inject NavigationManager Nav
+
+<div class="doc-card" @onclick="HandleClick" role="button" tabindex="0">
+    <div class="doc-av-wrap">
+        <div class="doc-av" style="@($"background:{Avatar};width:52px;height:52px;font-size:18px")">@Initials</div>
+        @if (IsOnline) { <div class="doc-online"></div> }
+    </div>
+    <div class="doc-name" style="margin-top:10px">@Name</div>
+    <div class="doc-spec">@Specialty</div>
+    <div class="doc-rating"><span class="star">★</span> @Rating · @ReviewCount</div>
+    <button class="doc-card-book"
+            @onclick:stopPropagation="true"
+            @onclick="HandleBooking">Đặt lịch</button>
+</div>
+
+@code {
+    [Parameter] public string? Name        { get; set; }
+    [Parameter] public string? Specialty   { get; set; }
+    [Parameter] public string? Rating      { get; set; }
+    [Parameter] public string? ReviewCount { get; set; }
+    [Parameter] public string? Initials    { get; set; }
+    [Parameter] public string? Avatar      { get; set; }
+    [Parameter] public bool    IsOnline    { get; set; }
+
+    private void HandleClick()
+        => Nav.NavigateTo($"/booking/doctors?specialty={Uri.EscapeDataString(Specialty ?? "")}");
+
+    private void HandleBooking()
+        => Nav.NavigateTo($"/booking/doctors?specialty={Uri.EscapeDataString(Specialty ?? "")}");
+}

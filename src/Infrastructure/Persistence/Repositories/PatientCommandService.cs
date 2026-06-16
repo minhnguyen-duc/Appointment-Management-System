@@ -1,6 +1,6 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
-using Presentation.Services;
+using Application.Common.DTOs;
 
 namespace Infrastructure.Persistence.Repositories;
 

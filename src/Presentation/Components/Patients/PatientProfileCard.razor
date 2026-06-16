@@ -1,0 +1,29 @@
+@if (Patient is not null)
+{
+    <div class="card">
+        <div class="card-header fw-semibold">Thông tin cá nhân</div>
+        <div class="card-body">
+            <div class="text-center mb-3">
+                <div class="avatar-circle bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                     style="width:64px;height:64px;font-size:24px;font-weight:600;">
+                    @Patient.FullName[0].ToString().ToUpper()
+                </div>
+                <div class="fw-semibold mt-2">@Patient.FullName</div>
+            </div>
+            <dl class="row mb-0 small">
+                <dt class="col-sm-5">Số điện thoại</dt>
+                <dd class="col-sm-7">@Patient.PhoneNumber</dd>
+                <dt class="col-sm-5">Email</dt>
+                <dd class="col-sm-7">@(Patient.Email ?? "—")</dd>
+                <dt class="col-sm-5">Ngày sinh</dt>
+                <dd class="col-sm-7">@Patient.DateOfBirth.ToString("dd/MM/yyyy")</dd>
+                <dt class="col-sm-5">Số lịch hẹn</dt>
+                <dd class="col-sm-7">@Patient.AppointmentCount</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public PatientDto? Patient { get; set; }
+}

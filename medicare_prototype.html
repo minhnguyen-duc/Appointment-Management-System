@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCare — Prototype Hệ thống đặt khám</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base: #F2F0EB;
+    --bg-card: #FAFAF7;
+    --bg-white: #FFFFFF;
+    --text-primary: #1A1A17;
+    --text-secondary: #6B6965;
+    --text-tertiary: #A8A5A1;
+    --border: rgba(0,0,0,0.08);
+    --border-med: rgba(0,0,0,0.12);
+    --blue-bg: #E6F1FB;
+    --blue-mid: #B5D4F4;
+    --blue-text: #0C447C;
+    --blue-dark: #042C53;
+    --blue-btn: #185FA5;
+    --green-bg: #E1F5EE;
+    --green-text: #0F6E56;
+    --red-bg: #FCEBEB;
+    --red-text: #A32D2D;
+    --purple-bg: #EEEDFE;
+    --purple-text: #3C3489;
+    --orange-bg: #FAEEDA;
+    --orange-text: #854F0B;
+    --pink-bg: #FBEAF0;
+    --pink-text: #993556;
+    --gold: #BA7517;
+    --success-green: #3B6D11;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ===== NAV BAR ===== */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg-base);
+    border-bottom: 0.5px solid var(--border-med);
+    padding: 10px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topnav-logo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .topnav-logo-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--blue-bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .screen-tabs { display: flex; gap: 4px; align-items: center; }
+  .tab-btn {
+    padding: 5px 12px; border-radius: 99px; font-size: 12px;
+    border: 0.5px solid var(--border); background: transparent;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    color: var(--text-secondary); transition: all 0.15s;
+  }
+  .tab-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+  .tab-btn.active { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+
+  /* ===== SCREEN WRAPPER ===== */
+  .screen { display: none; animation: fadeIn 0.2s ease; }
+  .screen.visible { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  /* ===== REUSABLE COMPONENTS ===== */
+  .card {
+    background: var(--bg-white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+  .card-p { padding: 16px; }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 500;
+  }
+
+  button, .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 8px 16px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border);
+    background: var(--bg-white); color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; line-height: 1;
+  }
+  button:hover { border-color: var(--border-med); background: var(--bg-card); }
+  button.primary {
+    background: var(--text-primary); color: #fff; border-color: var(--text-primary);
+  }
+  button.primary:hover { background: #333; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  input, select {
+    width: 100%; padding: 9px 12px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-med); background: var(--bg-white);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary);
+    outline: none; transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--blue-btn); }
+  input::placeholder { color: var(--text-tertiary); }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 15px; font-weight: 500; }
+  .section-link { font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+
+  /* ===== BREADCRUMB ===== */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;
+  }
+  .breadcrumb svg { flex-shrink: 0; }
+  .breadcrumb .back { cursor: pointer; }
+  .breadcrumb .back:hover { color: var(--text-primary); }
+
+  /* ===== STEPPER ===== */
+  .stepper {
+    display: flex; align-items: center; gap: 0; margin-bottom: 24px;
+  }
+  .step-item { display: flex; align-items: center; gap: 6px; }
+  .step-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; flex-shrink: 0;
+  }
+  .step-dot.done { background: var(--green-bg); }
+  .step-dot.active { background: var(--blue-bg); color: var(--blue-text); }
+  .step-dot.inactive { background: var(--bg-base); border: 0.5px solid var(--border); color: var(--text-tertiary); }
+  .step-label { font-size: 12px; }
+  .step-label.active { font-weight: 500; }
+  .step-label.inactive { color: var(--text-tertiary); }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 6px; }
+
+  /* ===== HEADER BAR ===== */
+  .header-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; border-bottom: 0.5px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .logo-group { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--blue-bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; }
+  .nav-links { display: flex; align-items: center; gap: 20px; font-size: 13px; color: var(--text-secondary); }
+  .nav-links span { cursor: pointer; }
+  .nav-links span:hover { color: var(--text-primary); }
+  .avatar-sm {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--blue-bg); display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: var(--blue-text);
+  }
+
+  /* ===== CHIP FILTERS ===== */
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip {
+    padding: 5px 13px; border-radius: 99px; font-size: 12px; font-weight: 400;
+    border: 0.5px solid var(--border); background: var(--bg-white);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .chip.active { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+  .chip:hover:not(.active) { border-color: var(--border-med); background: var(--bg-card); }
+
+  /* ===== SLOT GRID ===== */
+  .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .slot {
+    padding: 8px 0; text-align: center; font-size: 12px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-md);
+    background: var(--bg-white); cursor: pointer; transition: all 0.15s;
+  }
+  .slot:hover:not(.taken) { border-color: var(--border-med); }
+  .slot.selected { background: var(--text-primary); color: #fff; border-color: var(--text-primary); font-weight: 500; }
+  .slot.taken { opacity: 0.4; text-decoration: line-through; cursor: not-allowed; border-style: dashed; }
+
+  /* ===== PAYMENT ROW ===== */
+  .pay-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border: 0.5px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer; margin-bottom: 8px;
+    transition: all 0.15s;
+  }
+  .pay-option.selected { border-color: var(--blue-mid); background: var(--blue-bg); }
+  .pay-icon-wrap {
+    width: 38px; height: 30px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 9px; font-weight: 600;
+  }
+
+  /* ===== OTP SCREEN ===== */
+  .otp-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+  .otp-box {
+    width: 50px; height: 56px; border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md); text-align: center; font-size: 22px;
+    font-weight: 500; font-family: 'DM Mono', monospace;
+    outline: none; transition: border-color 0.15s;
+  }
+  .otp-box:focus { border-color: var(--blue-btn); }
+
+  /* ===== SUCCESS TICKET ===== */
+  .ticket {
+    background: var(--bg-white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .ticket-header {
+    background: linear-gradient(135deg, #185FA5 0%, #0C447C 100%);
+    padding: 24px; color: #fff; text-align: center;
+  }
+  .ticket-divider {
+    position: relative; height: 1px;
+    background: repeating-linear-gradient(90deg, transparent, transparent 6px, var(--border) 6px, var(--border) 12px);
+    margin: 0;
+  }
+  .ticket-divider::before, .ticket-divider::after {
+    content: '';
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--bg-base);
+  }
+  .ticket-divider::before { left: -10px; }
+  .ticket-divider::after { right: -10px; }
+  .ticket-body { padding: 20px; }
+  .ticket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ticket-field-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 3px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .ticket-field-val { font-size: 13px; font-weight: 500; }
+  .qr-placeholder {
+    width: 80px; height: 80px; border: 0.5px solid var(--border);
+    border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+    background: var(--bg-base);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div class="topnav-logo">
+    <div class="topnav-logo-mark">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M12 14v4"/><path d="M10 16h4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+    </div>
+    MediCare
+  </div>
+  <div class="screen-tabs">
+    <button class="tab-btn active" onclick="switchScreen(0)">① Trang chủ</button>
+    <button class="tab-btn" onclick="switchScreen(1)">② Chọn bác sĩ</button>
+    <button class="tab-btn" onclick="switchScreen(2)">③ Ngày &amp; Giờ</button>
+    <button class="tab-btn" onclick="switchScreen(3)">④ Thanh toán</button>
+    <button class="tab-btn" onclick="switchScreen(4)">⑤ Phiếu khám</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     SCREEN 1: TRANG CHỦ
+     ================================================================ -->
+<div class="screen visible" id="screen-0">
+<div class="page">
+
+  <div class="header-bar">
+    <div class="logo-group">
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M12 14v4"/><path d="M10 16h4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+      </div>
+      <span class="logo-text">MediCare</span>
+    </div>
+    <div class="nav-links">
+      <span>Đăng ký khám</span>
+      <span>Phiếu khám</span>
+      <span>Hướng dẫn</span>
+      <span>Liên hệ</span>
+      <div class="avatar-sm">NM</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 2px 20px;">
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:5px;">Xin chào, Nguyễn Mai 👋</div>
+    <div style="font-size:23px;font-weight:500;line-height:1.3;margin-bottom:6px;">Đặt lịch khám bệnh<br/>nhanh chóng và dễ dàng</div>
+    <div style="font-size:13px;color:var(--text-secondary);">Chọn hình thức đăng ký phù hợp với bạn</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+    <div class="card card-p" style="cursor:pointer;" onclick="switchScreen(1)">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Khám theo bác sĩ</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">Chọn bác sĩ chuyên khoa bạn muốn khám, sau đó chọn ngày giờ</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--blue-text);font-weight:500;">Chọn bác sĩ →</div>
+    </div>
+    <div class="card card-p" style="cursor:pointer;" onclick="switchScreen(2)">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+      </div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Khám theo ngày</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">Chọn ngày khám trước, hệ thống sẽ hiển thị bác sĩ có lịch</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--green-text);font-weight:500;">Xem lịch →</div>
+    </div>
+  </div>
+
+  <div style="background:var(--blue-bg);border:0.5px solid var(--blue-mid);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="switchScreen(4)">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:40px;height:40px;border-radius:8px;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M8 14h2"/><path d="M14 14h2"/><path d="M8 18h2"/><path d="M14 18h2"/></svg>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--blue-text);letter-spacing:0.5px;margin-bottom:2px;">LỊCH KHÁM SẮP TỚI</div>
+        <div style="font-size:14px;font-weight:500;color:var(--blue-dark);">BS. Trần Văn Nam — Tim mạch</div>
+        <div style="font-size:12px;color:var(--blue-text);">Thứ Ba, 28/04/2026 · 09:30 · Phòng 204</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--blue-text);font-weight:500;">Xem →</div>
+  </div>
+
+  <div class="section-head"><span class="section-title">Chuyên khoa phổ biến</span><span class="section-link">Xem tất cả</span></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;">
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Tim mạch</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">12 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Thần kinh</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">8 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Tiêu hóa</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">10 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--orange-bg);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Mắt</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">6 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6l-4 4v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8l-4-4V2"/><path d="M9 2h6"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Nhi khoa</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">9 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Da liễu</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">7 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:#FAECE7;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5a2.5 2.5 0 0 1-5 0V2"/><path d="M7 2v20"/><path d="M21 16V2h-4a4 4 0 0 0-4 4v3a4 4 0 0 0 4 4h4Z"/><path d="M21 16v6"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Răng hàm mặt</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">5 bác sĩ</div>
+    </div>
+    <div class="card" style="padding:14px 10px;text-align:center;cursor:pointer;">
+      <div style="width:32px;height:32px;margin:0 auto 8px;border-radius:8px;background:var(--bg-base);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:500;">Tất cả</div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">18 khoa</div>
+    </div>
+  </div>
+
+  <div class="section-head"><span class="section-title">Tiện ích khác</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;">
+    <div class="card card-p" style="cursor:pointer;">
+      <svg width="18" height="18" style="margin-bottom:10px;" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Tra cứu phiếu khám</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">Tìm và in phiếu khám bằng mã</div>
+    </div>
+    <div class="card card-p" style="cursor:pointer;">
+      <svg width="18" height="18" style="margin-bottom:10px;" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Tư vấn trực tuyến</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">Live chat với nhân viên y tế</div>
+    </div>
+    <div class="card card-p" style="cursor:pointer;">
+      <svg width="18" height="18" style="margin-bottom:10px;" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Hỏi đáp nhanh</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">Giải đáp quy trình khám bệnh</div>
+    </div>
+  </div>
+
+  <div style="padding:12px 2px 0;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:11px;color:var(--text-tertiary);">
+    <span>© 2026 MediCare</span>
+    <span>Hotline: 1900 1234 · hotro@medicare.vn</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ================================================================
+     SCREEN 2: CHỌN BÁC SĨ
+     ================================================================ -->
+<div class="screen" id="screen-1">
+<div class="page">
+
+  <div class="breadcrumb">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span class="back" onclick="switchScreen(0)">Quay lại</span>
+    <span style="color:var(--text-tertiary);">·</span>
+    <span>Khám theo bác sĩ</span>
+  </div>
+
+  <div class="stepper">
+    <div class="step-item">
+      <div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <span class="step-label" style="color:var(--text-secondary);">Hồ sơ</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-dot active">2</div>
+      <span class="step-label active">Bác sĩ</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-dot inactive">3</div>
+      <span class="step-label inactive">Thời gian</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-dot inactive">4</div>
+      <span class="step-label inactive">Thanh toán</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:6px;font-size:20px;font-weight:500;">Chọn bác sĩ khám</div>
+  <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">42 bác sĩ có lịch khám trong 7 ngày tới</div>
+
+  <div style="display:grid;grid-template-columns:1fr 160px 130px;gap:8px;margin-bottom:12px;">
+    <div style="position:relative;">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="Tìm theo tên bác sĩ..." style="padding-left:32px;"/>
+    </div>
+    <select><option>Tất cả chuyên khoa</option><option>Tim mạch</option><option>Thần kinh</option><option>Tiêu hóa</option></select>
+    <select><option>Mặc định</option><option>Đánh giá cao</option><option>Giá thấp → cao</option></select>
+  </div>
+
+  <div class="chip-row">
+    <div class="chip active">Tất cả</div>
+    <div class="chip">Còn lịch hôm nay</div>
+    <div class="chip">PGS, TS</div>
+    <div class="chip">Đã khám trước đây</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+
+    <!-- Doctor 1 -->
+    <div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--purple-text);flex-shrink:0;">NH</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+          <span style="font-size:14px;font-weight:500;">PGS. TS. BS. Nguyễn Văn Hùng</span>
+          <span class="badge" style="background:var(--purple-bg);color:var(--purple-text);">PGS. TS</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Tim mạch · 25 năm kinh nghiệm</div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text-secondary);">
+          <span style="display:flex;align-items:center;gap:3px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.9 (326)
+          </span>
+          <span style="display:flex;align-items:center;gap:4px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--success-green);display:inline-block;"></span>
+            Còn lịch hôm nay
+          </span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:8px;">500.000đ</div>
+        <button class="primary" style="padding:6px 14px;font-size:12px;" onclick="switchScreen(2)">Chọn</button>
+      </div>
+    </div>
+
+    <!-- Doctor 2 -->
+    <div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--green-text);flex-shrink:0;">TM</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+          <span style="font-size:14px;font-weight:500;">TS. BS. Trần Thị Minh</span>
+          <span class="badge" style="background:var(--green-bg);color:var(--green-text);">TS</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Tiêu hóa · 18 năm kinh nghiệm</div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text-secondary);">
+          <span style="display:flex;align-items:center;gap:3px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.8 (214)
+          </span>
+          <span style="display:flex;align-items:center;gap:4px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;"></span>
+            Sớm nhất: thứ Bảy
+          </span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:8px;">400.000đ</div>
+        <button style="padding:6px 14px;font-size:12px;" onclick="switchScreen(2)">Chọn</button>
+      </div>
+    </div>
+
+    <!-- Doctor 3 - Đã khám -->
+    <div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--blue-text);flex-shrink:0;">VN</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+          <span style="font-size:14px;font-weight:500;">BS. CKII. Lê Văn Nam</span>
+          <span class="badge" style="background:var(--blue-bg);color:var(--blue-text);">CKII</span>
+          <span class="badge" style="background:var(--orange-bg);color:var(--orange-text);">Đã khám</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Tim mạch · 15 năm kinh nghiệm</div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text-secondary);">
+          <span style="display:flex;align-items:center;gap:3px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.7 (189)
+          </span>
+          <span style="display:flex;align-items:center;gap:4px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--success-green);display:inline-block;"></span>
+            Còn lịch hôm nay
+          </span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:8px;">350.000đ</div>
+        <button style="padding:6px 14px;font-size:12px;" onclick="switchScreen(2)">Chọn</button>
+      </div>
+    </div>
+
+    <!-- Doctor 4 - Hết lịch -->
+    <div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:14px;opacity:0.5;">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--pink-text);flex-shrink:0;">HL</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <span style="font-size:14px;font-weight:500;">ThS. BS. Phạm Hương Lan</span>
+          <span class="badge" style="background:var(--pink-bg);color:var(--pink-text);">ThS</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Nhi khoa · 10 năm kinh nghiệm</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--red-text);display:inline-block;"></span>
+          Hết lịch tuần này
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:8px;">300.000đ</div>
+        <button disabled style="padding:6px 14px;font-size:12px;">Chọn</button>
+      </div>
+    </div>
+
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-secondary);">Hiển thị 4 / 42 bác sĩ · <span style="color:var(--blue-text);cursor:pointer;">Xem thêm</span></div>
+
+</div>
+</div>
+
+<!-- ================================================================
+     SCREEN 3: CHỌN NGÀY GIỜ
+     ================================================================ -->
+<div class="screen" id="screen-2">
+<div class="page">
+
+  <div class="breadcrumb">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span class="back" onclick="switchScreen(1)">Quay lại</span>
+    <span style="color:var(--text-tertiary);">·</span>
+    <span>Chọn ngày &amp; giờ khám</span>
+  </div>
+
+  <div class="stepper">
+    <div class="step-item"><div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="step-label" style="color:var(--text-secondary);">Hồ sơ</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="step-label" style="color:var(--text-secondary);">Bác sĩ</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot active">3</div><span class="step-label active">Thời gian</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot inactive">4</div><span class="step-label inactive">Thanh toán</span></div>
+  </div>
+
+  <div class="card" style="padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--purple-text);">NH</div>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:500;">PGS. TS. BS. Nguyễn Văn Hùng</div>
+      <div style="font-size:11px;color:var(--text-secondary);">Tim mạch · Phòng khám 204 · 500.000đ</div>
+    </div>
+    <div style="font-size:12px;color:var(--blue-text);cursor:pointer;" onclick="switchScreen(1)">Đổi bác sĩ</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:290px 1fr;gap:16px;">
+
+    <!-- Calendar -->
+    <div class="card" style="padding:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:13px;font-weight:500;">Tháng 4, 2026</span>
+        <div style="display:flex;gap:4px;">
+          <button style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:10px;color:var(--text-tertiary);text-align:center;margin-bottom:6px;">
+        <div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div>
+      </div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:12px;text-align:center;">
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border);font-size:10px;color:var(--text-secondary);">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--blue-btn);display:inline-block;"></span>Có slot</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--text-primary);display:inline-block;"></span>Đã chọn</span>
+        <span style="display:flex;align-items:center;gap:4px;color:var(--text-tertiary);">Đã khóa</span>
+      </div>
+    </div>
+
+    <!-- Time slots -->
+    <div>
+      <div style="font-size:13px;margin-bottom:4px;">Thứ Ba, <strong>28/04/2026</strong></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">Chọn khung giờ — tối đa 10 bệnh nhân/slot</div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <span style="font-size:12px;font-weight:500;">Buổi sáng</span>
+        <span style="font-size:11px;color:var(--text-secondary);">· 8 slot còn</span>
+      </div>
+      <div class="slot-grid" style="margin-bottom:16px;">
+        <div class="slot">07:30</div>
+        <div class="slot">08:00</div>
+        <div class="slot selected" onclick="selectSlot(this)">09:30</div>
+        <div class="slot">10:00</div>
+        <div class="slot">10:30</div>
+        <div class="slot taken">11:00</div>
+        <div class="slot">11:30</div>
+        <div class="slot taken">12:00</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <span style="font-size:12px;font-weight:500;">Buổi chiều</span>
+        <span style="font-size:11px;color:var(--text-secondary);">· 5 slot còn</span>
+      </div>
+      <div class="slot-grid">
+        <div class="slot">13:30</div>
+        <div class="slot">14:00</div>
+        <div class="slot taken">14:30</div>
+        <div class="slot">15:00</div>
+        <div class="slot">15:30</div>
+        <div class="slot">16:00</div>
+        <div class="slot taken">16:30</div>
+        <div class="slot">17:00</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border);">
+    <div>
+      <div style="font-size:11px;color:var(--text-secondary);">Đã chọn</div>
+      <div style="font-size:13px;font-weight:500;">Thứ Ba, 28/04/2026 · 09:30</div>
+    </div>
+    <button class="primary" style="padding:10px 24px;font-size:13px;" onclick="switchScreen(3)">Tiếp tục →</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ================================================================
+     SCREEN 4: THANH TOÁN
+     ================================================================ -->
+<div class="screen" id="screen-3">
+<div class="page">
+
+  <div class="breadcrumb">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span class="back" onclick="switchScreen(2)">Quay lại</span>
+    <span style="color:var(--text-tertiary);">·</span>
+    <span>Xác nhận &amp; thanh toán</span>
+  </div>
+
+  <div class="stepper">
+    <div class="step-item"><div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="step-label" style="color:var(--text-secondary);">Hồ sơ</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="step-label" style="color:var(--text-secondary);">Bác sĩ</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="step-label" style="color:var(--text-secondary);">Thời gian</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot active">4</div><span class="step-label active">Thanh toán</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 264px;gap:16px;align-items:start;">
+
+    <div>
+      <!-- Patient info -->
+      <div class="card card-p" style="margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Thông tin bệnh nhân</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:12px;">
+          <div><div style="color:var(--text-tertiary);margin-bottom:2px;">Họ tên</div><div>Nguyễn Mai</div></div>
+          <div><div style="color:var(--text-tertiary);margin-bottom:2px;">Ngày sinh</div><div>15/03/1995</div></div>
+          <div><div style="color:var(--text-tertiary);margin-bottom:2px;">Giới tính</div><div>Nữ</div></div>
+          <div><div style="color:var(--text-tertiary);margin-bottom:2px;">Số điện thoại</div><div>0901 234 567</div></div>
+          <div style="grid-column:1/-1;"><div style="color:var(--text-tertiary);margin-bottom:2px;">Địa chỉ</div><div>123 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM</div></div>
+        </div>
+      </div>
+
+      <!-- Booking summary -->
+      <div class="card card-p" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:14px;font-weight:500;">Chi tiết lịch khám</span>
+          <span style="font-size:11px;color:var(--blue-text);cursor:pointer;" onclick="switchScreen(2)">Chỉnh sửa</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:0.5px solid var(--border);margin-bottom:12px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--purple-text);">NH</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;">PGS. TS. BS. Nguyễn Văn Hùng</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Tim mạch</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            <div><div style="color:var(--text-tertiary);font-size:11px;">Ngày khám</div><div>Thứ Ba, 28/04/2026</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div><div style="color:var(--text-tertiary);font-size:11px;">Giờ khám</div><div>09:30 · Buổi sáng</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><div style="color:var(--text-tertiary);font-size:11px;">Phòng khám</div><div>Phòng 204, tầng 2</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <div><div style="color:var(--text-tertiary);font-size:11px;">Mã đặt khám</div><div style="font-family:'DM Mono',monospace;font-size:11px;">DKK2026042800419</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment method -->
+      <div class="card card-p">
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Phương thức thanh toán</div>
+        <div class="pay-option selected" onclick="selectPay(this)">
+          <input type="radio" name="pay" checked style="margin:0;width:15px;height:15px;accent-color:var(--blue-btn);flex-shrink:0;"/>
+          <div class="pay-icon-wrap" style="background:var(--blue-bg);color:var(--blue-text);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-5h6v5"/></svg>
+          </div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Internet Banking</div><div style="font-size:11px;color:var(--text-secondary);">Vietcombank, Techcombank, BIDV, Agribank...</div></div>
+        </div>
+        <div class="pay-option" onclick="selectPay(this)">
+          <input type="radio" name="pay" style="margin:0;width:15px;height:15px;flex-shrink:0;"/>
+          <div class="pay-icon-wrap" style="background:var(--pink-bg);color:var(--pink-text);">Momo</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Ví MoMo</div><div style="font-size:11px;color:var(--text-secondary);">Thanh toán qua ứng dụng MoMo</div></div>
+        </div>
+        <div class="pay-option" onclick="selectPay(this)">
+          <input type="radio" name="pay" style="margin:0;width:15px;height:15px;flex-shrink:0;"/>
+          <div class="pay-icon-wrap" style="background:var(--blue-bg);color:var(--blue-text);">VNPay</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;">VNPay QR</div><div style="font-size:11px;color:var(--text-secondary);">Quét QR bằng app ngân hàng</div></div>
+        </div>
+        <div class="pay-option" onclick="selectPay(this)" style="margin-bottom:0;">
+          <input type="radio" name="pay" style="margin:0;width:15px;height:15px;flex-shrink:0;"/>
+          <div class="pay-icon-wrap" style="background:var(--bg-base);color:var(--text-secondary);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Thẻ ATM / Tín dụng</div><div style="font-size:11px;color:var(--text-secondary);">Visa, MasterCard, JCB...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card card-p" style="position:sticky;top:70px;">
+      <div style="font-size:14px;font-weight:500;margin-bottom:14px;">Chi tiết thanh toán</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;"><span style="color:var(--text-secondary);">Phí khám chuyên khoa</span><span>500.000đ</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;"><span style="color:var(--text-secondary);">Phí đặt chỗ</span><span>10.000đ</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:14px;"><span style="color:var(--success-green);">Giảm giá khách quen</span><span style="color:var(--success-green);">−50.000đ</span></div>
+      <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:13px;font-weight:500;">Tổng thanh toán</span>
+        <span style="font-size:19px;font-weight:600;">460.000đ</span>
+      </div>
+      <button class="primary" style="width:100%;padding:12px;font-size:13px;" onclick="switchScreen(4)">Thanh toán 460.000đ</button>
+      <div style="display:flex;align-items:flex-start;gap:6px;margin-top:10px;font-size:10px;color:var(--text-secondary);line-height:1.5;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Thanh toán mã hóa SSL — thông tin của bạn được bảo mật</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- ================================================================
+     SCREEN 5: PHIẾU KHÁM THÀNH CÔNG
+     ================================================================ -->
+<div class="screen" id="screen-4">
+<div class="page">
+
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="width:56px;height:56px;border-radius:50%;background:var(--green-bg);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:20px;font-weight:500;margin-bottom:4px;">Đăng ký thành công!</div>
+    <div style="font-size:13px;color:var(--text-secondary);">Phiếu khám đã được gửi đến <strong>0901 234 567</strong> và email của bạn</div>
+  </div>
+
+  <div style="max-width:480px;margin:0 auto 24px;">
+    <div class="ticket">
+      <div class="ticket-header">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M12 14v4"/><path d="M10 16h4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+          </div>
+          <span style="font-size:14px;font-weight:500;opacity:0.9;">MediCare</span>
+        </div>
+        <div style="font-size:11px;opacity:0.7;letter-spacing:0.8px;margin-bottom:4px;">PHIẾU ĐĂNG KÝ KHÁM</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;letter-spacing:2px;margin-bottom:8px;">DKK2026042800419</div>
+        <div style="display:inline-block;background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:99px;font-size:11px;">STT khám: <strong>07</strong></div>
+      </div>
+
+      <div class="ticket-divider"></div>
+
+      <div class="ticket-body">
+        <div class="ticket-grid" style="margin-bottom:16px;">
+          <div>
+            <div class="ticket-field-label">Bệnh nhân</div>
+            <div class="ticket-field-val">Nguyễn Mai</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Ngày sinh</div>
+            <div class="ticket-field-val">15/03/1995</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Bác sĩ khám</div>
+            <div class="ticket-field-val">PGS. TS. Nguyễn Văn Hùng</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Chuyên khoa</div>
+            <div class="ticket-field-val">Tim mạch</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Ngày khám</div>
+            <div class="ticket-field-val">Thứ Ba, 28/04/2026</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Giờ khám</div>
+            <div class="ticket-field-val">09:30 · Buổi sáng</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Phòng khám</div>
+            <div class="ticket-field-val">Phòng 204, tầng 2</div>
+          </div>
+          <div>
+            <div class="ticket-field-label">Trạng thái thanh toán</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--success-green);display:inline-block;"></span>
+              <span class="ticket-field-val" style="color:var(--success-green);">Đã thanh toán</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding-top:14px;border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div class="ticket-field-label" style="margin-bottom:6px;">Mã QR xuất trình tại quầy</div>
+            <div class="qr-placeholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01"/><path d="M18 14h.01"/><path d="M14 18h.01"/><path d="M18 18h.01"/><path d="M18 10h.01"/><path d="M10 14v4"/><path d="M14 10h4"/></svg>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="ticket-field-label" style="margin-bottom:6px;">Tổng đã thanh toán</div>
+            <div style="font-size:22px;font-weight:600;">460.000đ</div>
+            <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">Internet Banking</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:480px;margin:0 auto 20px;">
+    <div style="background:var(--orange-bg);border:0.5px solid #E5BE7A;border-radius:var(--radius-lg);padding:14px 16px;">
+      <div style="font-size:13px;font-weight:500;color:var(--orange-text);margin-bottom:8px;">📋 Lưu ý trước khi khám</div>
+      <div style="font-size:12px;color:var(--orange-text);line-height:1.8;">
+        • Đến trước giờ hẹn <strong>15 phút</strong> để làm thủ tục tại quầy lễ tân<br/>
+        • Mang theo <strong>CMND/CCCD</strong> và phiếu này (bản in hoặc điện thoại)<br/>
+        • Nếu cần hủy, vui lòng hủy trước <strong>24 giờ</strong> để được hoàn phí<br/>
+        • Hotline hỗ trợ: <strong>1900 1234</strong> (7:00 – 20:00 mỗi ngày)
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <button style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:6px;height:auto;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Tải phiếu PDF
+    </button>
+    <button style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:6px;height:auto;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.64 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17z"/></svg>
+      Thêm nhắc nhở
+    </button>
+    <button class="primary" style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:6px;height:auto;" onclick="switchScreen(0)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Về trang chủ
+    </button>
+  </div>
+
+</div>
+</div>
+
+<script>
+  // Switch screens
+  function switchScreen(idx) {
+    document.querySelectorAll('.screen').forEach((s, i) => {
+      s.classList.toggle('visible', i === idx);
+    });
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === idx);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Calendar
+  const availableDays = [24, 25, 28, 29, 30];
+  const grid = document.getElementById('cal-grid');
+  const days = [null,null,null,null,null,null,null, null,null,null,null,null,null,null, null,null,null,null,null,null,null, 24,25,26,27,28,29,30];
+  const dayOffset = 3;
+  for (let i = 0; i < dayOffset; i++) {
+    const d = document.createElement('div');
+    d.style.padding = '7px 0';
+    d.style.color = 'var(--text-tertiary)';
+    const prev = [28,29,30,31][i - (dayOffset - (dayOffset > 2 ? 3 : 0))] || '';
+    d.textContent = '';
+    grid.appendChild(d);
+  }
+  for (let d = 1; d <= 30; d++) {
+    const el = document.createElement('div');
+    el.style.padding = '7px 0';
+    el.style.position = 'relative';
+    el.style.cursor = 'default';
+    if (d < 24) {
+      el.style.color = 'var(--text-tertiary)';
+      el.textContent = d;
+    } else if (d === 28) {
+      el.style.background = 'var(--text-primary)';
+      el.style.color = '#fff';
+      el.style.borderRadius = '50%';
+      el.style.fontWeight = '500';
+      el.style.cursor = 'pointer';
+      el.textContent = d;
+    } else if (availableDays.includes(d)) {
+      el.textContent = d;
+      el.style.cursor = 'pointer';
+      const dot = document.createElement('span');
+      dot.style.cssText = 'position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--blue-btn);display:block;';
+      el.appendChild(dot);
+    } else {
+      el.style.color = 'var(--text-tertiary)';
+      el.textContent = d;
+    }
+    grid.appendChild(el);
+  }
+
+  // Slot selection
+  function selectSlot(el) {
+    if (el.classList.contains('taken')) return;
+    el.closest('.slot-grid').querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  document.querySelectorAll('.slot:not(.taken)').forEach(s => {
+    s.addEventListener('click', () => selectSlot(s));
+  });
+
+  // Payment option selection
+  function selectPay(el) {
+    document.querySelectorAll('.pay-option').forEach(p => {
+      p.classList.remove('selected');
+      p.style.borderColor = '';
+      p.style.background = '';
+    });
+    el.classList.add('selected');
+    el.querySelector('input[type=radio]').checked = true;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+@inject AppointmentClientService ApptService
+
+<div class="card">
+    <div class="card-header fw-semibold">Lịch sử khám</div>
+    <div class="card-body p-0">
+        @if (_loading) { <LoadingSpinner /> }
+        else if (!_appointments.Any())
+        {
+            <div class="p-4 text-center text-muted small">Chưa có lịch hẹn nào</div>
+        }
+        else
+        {
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày khám</th>
+                        <th>Bác sĩ</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in _appointments)
+                    {
+                        <tr>
+                            <td>@a.ScheduledAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@a.DoctorName</td>
+                            <td><StatusBadge Status="a.Status" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid PatientId { get; set; }
+
+    private List<AppointmentDto> _appointments = [];
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        // TODO: filter by PatientId when API supports it
+        _appointments = [];
+        _loading = false;
+    }
+}

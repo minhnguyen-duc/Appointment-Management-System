@@ -16,15 +16,16 @@ else
     <div class="row g-4">
         <div class="col-lg-7">
             <AppointmentDetailCard Appointment="_appointment" />
-            <PatientInfoCard Patient="_appointment.Patient" Class="mt-4" />
+            <PatientInfoCard PatientName="_appointment.PatientName" Class="mt-4" />
         </div>
         <div class="col-lg-5">
-            <DoctorInfoCard Doctor="_appointment.Doctor" />
+            <DoctorInfoCard DoctorName="_appointment.DoctorName"
+                            Specialization="_appointment.Specialization" />
             <AppointmentActions Appointment="_appointment"
                                 OnCancelled="Reload"
                                 OnConfirmed="Reload"
                                 Class="mt-4" />
-            <PaymentStatusCard Appointment="_appointment" Class="mt-4" />
+            <PaymentStatusCard AppointmentId="_appointment.Id" Class="mt-4" />
         </div>
     </div>
 }

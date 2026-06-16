@@ -18,4 +18,12 @@ public class SendGridEmailService(IConfiguration config) : IEmailService
 
     public async Task SendCancellationNoticeAsync(string email, Guid appointmentId, CancellationToken ct = default)
         => await Task.CompletedTask;
+
+    public async Task SendAsync(string to, string subject, string htmlBody, CancellationToken ct = default)
+    {
+        // TODO: call SendGrid API with _apiKey
+        // For now: log to console in dev
+        Console.WriteLine($"[SendGrid] To:{to} Subject:{subject}");
+        await Task.CompletedTask;
+    }
 }

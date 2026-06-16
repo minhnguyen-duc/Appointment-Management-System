@@ -1,0 +1,28 @@
+@if (Appointment is not null)
+{
+    <div class="card">
+        <div class="card-header fw-semibold">Thông tin lịch hẹn</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Bác sĩ</dt>
+                <dd class="col-sm-8">@Appointment.DoctorName</dd>
+                <dt class="col-sm-4">Chuyên khoa</dt>
+                <dd class="col-sm-8">@Appointment.Specialization</dd>
+                <dt class="col-sm-4">Thời gian</dt>
+                <dd class="col-sm-8">@Appointment.ScheduledAt.ToString("HH:mm — dd/MM/yyyy")</dd>
+                <dt class="col-sm-4">Thời lượng</dt>
+                <dd class="col-sm-8">@Appointment.DurationMinutes phút</dd>
+                @if (!string.IsNullOrWhiteSpace(Appointment.Notes))
+                {
+                    <dt class="col-sm-4">Ghi chú</dt>
+                    <dd class="col-sm-8">@Appointment.Notes</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public AppointmentDto? Appointment { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

@@ -12,7 +12,7 @@
 <div class="row g-3 mb-3">
     <div class="col-md-6">
         <input type="search" class="form-control" placeholder="Tìm tên bác sĩ..."
-               @bind="_search" @bind:event="oninput" @oninput="() => Reload()" />
+               @bind="_search" @bind:after="Reload" />
     </div>
     <div class="col-md-4">
         <select class="form-select" @bind="_specialization" @bind:after="Reload">
@@ -29,8 +29,9 @@
     {
         @foreach (var doc in _doctors)
         {
+            var docId = doc.Id;
             <div class="col-md-6 col-xl-4">
-                <DoctorCard Doctor="doc" OnView="() => Nav.NavigateTo($"/doctors/{doc.Id}")" />
+                <DoctorCard Doctor="doc" OnView="@(() => Nav.NavigateTo("/doctors/" + docId))" />
             </div>
         }
     }

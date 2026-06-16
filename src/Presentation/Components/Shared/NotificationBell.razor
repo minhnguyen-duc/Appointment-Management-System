@@ -1,0 +1,11 @@
+<button class="btn btn-icon position-relative" title="Thông báo">
+    <i class="bi bi-bell fs-5"></i>
+    @if (_count > 0)
+    {
+        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle badge-sm">@_count</span>
+    }
+</button>
+
+@code {
+    private int _count = 0; // TODO: wire to notification service
+}

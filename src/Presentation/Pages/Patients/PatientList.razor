@@ -19,20 +19,20 @@
     <div class="card-header">
         <input type="search" class="form-control w-auto d-inline-block"
                placeholder="Tìm theo tên, SĐT..."
-               @bind="_search" @bind:event="oninput" @oninput="Search" />
+               @bind="_search" @bind:after="Search" />
     </div>
     <div class="card-body p-0">
         @if (_loading) { <LoadingSpinner /> }
         else
         {
             <PatientTable Patients="_patients"
-                          OnView="id => Nav.NavigateTo($"/patients/{id}")" />
+                          OnView="@ViewPatient" />
             <Pagination CurrentPage="_page" TotalPages="_totalPages" OnPageChanged="ChangePage" />
         }
     </div>
 </div>
 
-<PatientFormModal Visible="_showModal" OnClose="() => _showModal = false" OnSaved="Reload" />
+<PatientFormModal Visible="_showModal" OnClose="@(() => _showModal = false)" OnSaved="Reload" />
 
 @code {
     private List<PatientDto> _patients = [];
@@ -51,7 +51,8 @@
         _loading = false;
     }
 
-    private async Task Search(ChangeEventArgs _) { _page = 1; await Reload(); }
+    private void ViewPatient(Guid id) => Nav.NavigateTo("/patients/" + id);
+    private async Task Search() { _page = 1; await Reload(); }
     private async Task ChangePage(int p) { _page = p; await Reload(); }
     private void ShowCreateModal() => _showModal = true;
 }

@@ -1,16 +1,22 @@
+@inject PaymentClientService PaymentService
+
 <div class="card @Class">
     <div class="card-header"><h6 class="mb-0">Thanh toán</h6></div>
     <div class="card-body">
-        @if (Appointment.PaymentReference is not null)
+        @if (_loading)
+        {
+            <div class="spinner-border spinner-border-sm text-muted"></div>
+        }
+        else if (_paymentRef is not null)
         {
             <span class="badge bg-success">Đã thanh toán</span>
-            <div class="text-muted small mt-1">Ref: @Appointment.PaymentReference</div>
+            <div class="text-muted small mt-1">Ref: @_paymentRef</div>
         }
         else
         {
             <span class="badge bg-warning text-dark">Chưa thanh toán</span>
             <div class="mt-2">
-                <a href="/appointments/@Appointment.Id/pay" class="btn btn-sm btn-outline-success">
+                <a href="/appointments/@AppointmentId/pay" class="btn btn-sm btn-outline-success">
                     <i class="bi bi-credit-card me-1"></i>Thanh toán VNPAY
                 </a>
             </div>
@@ -19,6 +25,17 @@
 </div>
 
 @code {
-    [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+    [Parameter] public Guid AppointmentId { get; set; }
     [Parameter] public string? Class { get; set; }
+
+    private string? _paymentRef;
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        // TODO: wire to real payment status check
+        _paymentRef = await PaymentService.GetPaymentRefAsync(AppointmentId);
+        _loading = false;
+    }
 }

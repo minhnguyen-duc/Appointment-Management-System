@@ -1,0 +1,170 @@
+@page "/booking/doctors"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Application.Booking.Queries
+@using Application.Common.DTOs
+@inject GetDoctorCatalogQueryHandler DoctorCatalogHandler
+@inject NavigationManager Nav
+
+<PageTitle>Đặt lịch khám — Chọn bác sĩ · MediCare</PageTitle>
+<link rel="stylesheet" href="css/booking.css"/>
+
+<div class="booking-page">
+
+    <!-- Breadcrumb -->
+    <div class="bk-breadcrumb">
+        <a @onclick='() => Nav.NavigateTo("/homepage")'>Trang chủ</a>
+        <span class="sep">›</span>
+        <span>Đặt lịch khám</span>
+        <span class="sep">›</span>
+        <span>Chọn bác sĩ</span>
+    </div>
+
+    <h1 class="bk-page-title">Chọn bác sĩ</h1>
+
+    <!-- Specialty chips -->
+    <div class="spec-filter-row">
+        <button class="spec-pill @(string.IsNullOrEmpty(_specialty) ? "active" : "")"
+                @onclick='() => SetSpecialty("")'>
+            Tất cả
+        </button>
+        @foreach (var s in _specialties)
+        {
+            <button class="spec-pill @(_specialty == s ? "active" : "")"
+                    @onclick="() => SetSpecialty(s)">
+                @s
+            </button>
+        }
+    </div>
+
+    <!-- Search bar -->
+    <div class="bk-filter-bar">
+        <div class="bk-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search"
+                   placeholder="Tìm theo tên bác sĩ..."
+                   value="@_keyword"
+                   @oninput="OnSearchInput"/>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="bk-loading">
+            <div class="bk-spinner"></div>
+            <div>Đang tải danh sách bác sĩ...</div>
+        </div>
+    }
+    else
+    {
+        <!-- Result count -->
+        <div class="bk-result-count">
+            Tìm thấy <strong>@_filtered.Count</strong> bác sĩ
+            @if (!string.IsNullOrEmpty(_specialty)) { <span> trong chuyên khoa <strong>@_specialty</strong></span> }
+        </div>
+
+        @if (_filtered.Count == 0)
+        {
+            <div class="bk-empty">
+                <div class="bk-empty-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                </div>
+                <div class="bk-empty-title">Không tìm thấy bác sĩ phù hợp</div>
+                <div class="bk-empty-sub">Thử tìm với từ khóa khác hoặc chọn chuyên khoa khác</div>
+            </div>
+        }
+        else
+        {
+            <div class="doctor-grid">
+                @foreach (var doc in _filtered)
+                {
+                    <div class="doctor-card" @onclick="() => SelectDoctor(doc)" role="button" tabindex="0">
+                        <div class="doctor-card-banner"></div>
+                        <div class="doctor-card-body">
+                            <div class="doctor-card-header">
+                                <div class="doctor-card-av">@Initials(doc.FullName)</div>
+                                <div class="doctor-card-info">
+                                    <span class="doctor-card-title">@doc.AcademicTitle · @doc.Specialization</span>
+                                    <div class="doctor-card-name">@doc.FullName</div>
+                                </div>
+                            </div>
+                            <div class="doctor-card-bio">@(doc.Bio ?? "")</div>
+                            <div class="doctor-card-footer">
+                                <div class="doctor-card-fee">
+                                    @doc.ConsultationFee.ToString("N0")đ
+                                    <span> / lượt</span>
+                                </div>
+                                <button class="doctor-card-btn"
+                                        @onclick:stopPropagation="true"
+                                        @onclick="() => SelectDoctor(doc)">
+                                    Đặt lịch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter][SupplyParameterFromQuery(Name = "specialty")] public string? SpecialtyParam { get; set; }
+    [Parameter][SupplyParameterFromQuery(Name = "keyword")]   public string? KeywordParam   { get; set; }
+
+    private List<DoctorCatalogDto> _doctors    = [];
+    private List<DoctorCatalogDto> _filtered   = [];
+    private List<string>           _specialties = [];
+    private string _keyword   = "";
+    private string _specialty = "";
+    private bool   _loading   = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _keyword   = KeywordParam   ?? "";
+        _specialty = SpecialtyParam ?? "";
+        _doctors   = await DoctorCatalogHandler.HandleAsync(new GetDoctorCatalogQuery());
+        _specialties = _doctors.Select(d => d.Specialization).Distinct().Order().ToList();
+        Filter();
+        _loading = false;
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        _keyword = e.Value?.ToString() ?? "";
+        Filter();
+    }
+
+    private void SetSpecialty(string s)
+    {
+        _specialty = s;
+        Filter();
+        Nav.NavigateTo(
+            string.IsNullOrEmpty(s) ? "/booking/doctors" : $"/booking/doctors?specialty={Uri.EscapeDataString(s)}",
+            replace: true);
+    }
+
+    private void Filter()
+    {
+        _filtered = _doctors.Where(d =>
+            (string.IsNullOrEmpty(_keyword)   || d.FullName.Contains(_keyword, StringComparison.OrdinalIgnoreCase)
+                                              || d.Specialization.Contains(_keyword, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(_specialty) || d.Specialization == _specialty)
+        ).ToList();
+    }
+
+    private void SelectDoctor(DoctorCatalogDto doc)
+        => Nav.NavigateTo($"/booking/schedule/{doc.Id}");
+
+    private static string Initials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpper()
+            : name[..Math.Min(2, name.Length)].ToUpper();
+    }
+}
